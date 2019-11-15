@@ -25,9 +25,9 @@ No contribution guidelines at this point.
 ### User Stories
 
 ### Wireframes
-![wire frame](./assets/javatag_page1.jpg)
-![wire frame](./assets/javatag_page2.jpg)
-![wire frame](./assets/javatag_page3.jpg)
+![wire frame](./assets/Page_1.png)
+![wire frame](./assets/Page_2.png)
+![wire frame](./assets/Page_3.png)
 
 ### Project Scope
 #### MVP
