@@ -42,6 +42,23 @@ No contribution guidelines at this point.
 * Control who can see the game by using authentication
 * Bread crumbs
 
+### Daily Team Workflow
+#### Day 1
+
+#### Day 2
+
+#### Day 3
+
+#### Day 4
+
+#### Day 5
+
+## Code Style
+Java for Android
+
+## Tests
+Espresso tests for login, signup, home page, game page. 
+
 ## Communication plan
 * We will strive to create an open and welcoming environment where participation and contribution to the project and general community is a harassment-free experience for everyone, regardless of age, body size, disability, ethnicity, sex characteristics, gender identity and expression, level of experience, education, socio-economic status, nationality, personal appearance, race, religion, or sexual identity and orientation.
 * We will use welcoming and inclusive language, be respectful of differing viewpoints and experiences, gracefully accept constructive criticism, focus on what is best for the team and the community, and show empathy towards others.
@@ -87,3 +104,12 @@ No contribution guidelines at this point.
 * Failure will happen and it’s okay! We do this thing together.
 * If we’re moving too fast: Person who is slower - speak up! Fast coders can slow down. Person who is coding fast may need to take a break and help person catch up.
 * Take breaks as needed after communicating with the group
+
+## Credits
+Java 401 Instructional Team
+* Michelle
+* Nicholas
+* Jeff
+* Ginger
+
+## License
