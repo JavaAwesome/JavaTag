@@ -55,6 +55,6 @@ Non-Functional requirements of our MVP include:
 2. The app will be tested using Espresso
 
 ## Data Flow 
-A user opens the app and signs in. If there is no active game a new game will start when there are at least two users signed in. The user leaves the game by signing out of the app.
+A user opens the app and signs in. The app pings their location at the point of sign in. The app will display active games within a certain distance of the user's location as options to join an active game. The user will also have the option to create a new game instance for others nearby to join. Once the user is in an active game the app will ping their location at a defined frequency. The game starts with one person who is 'it'. Other users they tag also become 'it'. Those who are tagged mark themselves as tagged using the 'I got tagged' button. Games end when when all the users in the game instance have been tagged. The user can leave a game early by signing out of the app. Location pinging ceases when the game ends or the user signs out of the app.
 
 ![Data Flow Sketch]()
