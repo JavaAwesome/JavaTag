@@ -15,12 +15,15 @@ Create an Android app that includes a map of the current area so person can see 
 
 ### Acceptance Tests
 * Ensure that person can see the map and the other player(s) on that map
-* Ensure that player locations update accordingly.
 
 ## Exercise Goals
 As a user, I want an app that makes it fun to get some exercise, because I want to get in shape.
 
 ### Feature Task
-Ensure that the app is fun and exciting so the user wants to play it again
+* Create at least one feature that provides the user the opportunity to travel some distance by foot.
+* User experience is pleasant and encourages person to return to use the app.
 
 ### Acceptance Test
+* Ensure user tests are positive
+* Ensure that player locations update accordingly while user(s) in motion.
+
