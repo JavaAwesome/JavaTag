@@ -6,6 +6,7 @@
 * Jon Veach
 * Quang Nguyen
 * Sarah Fisher
+* Sharina Stubbs
 
 ## Version
 1.0.0
