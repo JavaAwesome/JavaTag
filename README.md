@@ -1,6 +1,47 @@
-# JavaTag
+# JavaTag: Code 401 Final Project
 
-## Communication plan: 
+## Team Members
+* Ahren Swett
+* James Dansie
+* Jon Veach
+* Quang Nguyen
+* Sarah Fisher
+
+## Version
+1.0.0
+
+## Problem Domain
+To make an android app where players can see one another on a map and tag one another.
+
+## Deployment
+
+## Instructions to run the app on your phone
+
+### Contribute
+No contribution guidelines at this point.
+
+## Build Status
+### User Stories
+
+### Wireframes
+
+### Project Scope
+#### MVP
+* Minimum of two players
+* Possible tag definitions, may change as we go:
+    * By distance
+    * By QR Code
+    * By taking a picture of them
+    * By facial recognition
+* Tag notifications
+
+#### Stretch goals
+* Showing multiple players on a map
+* Geo fence (bounds)
+* Control who can see the game by using authentication
+* Bread crumbs
+
+## Communication plan
 * We will strive to create an open and welcoming environment where participation and contribution to the project and general community is a harassment-free experience for everyone, regardless of age, body size, disability, ethnicity, sex characteristics, gender identity and expression, level of experience, education, socio-economic status, nationality, personal appearance, race, religion, or sexual identity and orientation.
 * We will use welcoming and inclusive language, be respectful of differing viewpoints and experiences, gracefully accept constructive criticism, focus on what is best for the team and the community, and show empathy towards others.
 * We will not tolerate unwelcome sexual attention or advances, trolling, insulting/derogatory comments, and personal or political attacks, public or private harassment, publishing others’ private information, or other conduct which could reasonably be considered inappropriate in an academic and professional setting.
@@ -14,7 +55,7 @@
 * There are no bad ideas.
 * Go way overkill on the comments.
 
-## Conflict plan: 
+## Conflict plan
 * If disagreements arise in the team we will make sure that everyone has a chance to state their opinion and be heard, not spoken over or dismissed, and discuss possible solutions as a team. If attempts to resolve the conflict is unsuccessful and a solution cannot be agreed upon we will escalate the discussion by reaching out to Boss and HR (Nicholas, Michelle, Jeff, and Ginger).
     * Everyone stops coding.
     * Return to communication ground rules.
@@ -28,20 +69,20 @@
 * Be honest.
 * Ask for help when needed.
 
-## Work plan:
+## Work plan
 * Work tasks will be sorted out at stand up and reassigned throughout the day as needed.
 * Tasks will be updated and tracked in project management tool.
 * Daily summaries will be added to the README.
 * Code Review and daily prep at 9:00am
 * Debrief before leaving for the day – 5:00pm.
 
-## Git process: 
+## Git process
 * Start in the same code base each morning.
 * Pull Requests as needed (particularly for route setup) and done as a group.
 * Master branch will only be working versions.
 * Dev branch is where we can break things.
 
-Misc: 
+## Misc
 * Failure will happen and it’s okay! We do this thing together.
 * If we’re moving too fast: Person who is slower - speak up! Fast coders can slow down. Person who is coding fast may need to take a break and help person catch up.
 * Take breaks as needed after communicating with the group
