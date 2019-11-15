@@ -10,12 +10,12 @@ Our app will provide the following functionality in the MVP:
 * Functionality to 'tag' other users
 * Notifications when users are tagged
 * A map view of the game players
-* Ability to create games with defined users invited to play
 
 ### Out
 Our app will not provide the following functionality in the MVP:
-* This app will never hold personal biometrics such as facial recognition on our server.
-* This app will never devulge a user's location to members not in the current game group.
+* This app will never hold personal biometrics such as facial recognition on our server
+* This app will never devulge a user's location to members not in the current game group
+* This app will never sell a user's location to outside vendors
 
 ## MVP
 Our MVP will include:
@@ -33,22 +33,28 @@ Our stretch goals include:
 * Geo fence (bounds)
 * Control who can see the game by using authentication
 * Bread crumbs
+* Power ups
+* Themed games
+* Ability to have multiple games running
+* Ability to customize who is invited to a game
+* Customize notifications when tagged
+* Have a stats page that shows metrics including how far user has walked, how many times user has been tagged
+* Bonus items to find or purchase that give you extra powers like improved visibility, increased frequency of location updates, cloaking
+* Monetization
 
 ## Functional Requirements
 Functional requirements of our MVP include:
-1.	A user can view the location of all members in the current game group.
-2.	A user can create a new game and choose which members are invited to play.
-3.	A user can receive notifications when they have been tagged and when they have tagged someone else.
-4.	A user can log in and log out.
+1.	A user can view the location of all members in the current game group
+2.	A user be notified when they have been tagged and when they have tagged someone else
+3.	A user can log in and log out
+4. A user's map view will follow their movement during the game
 
 ## Non-Functional Requirements
 Non-Functional requirements of our MVP include:
-1.	A user’s password will be protected using _________.
-2.	The app will be scalable to increase the number of users registered with the app.
+1.	A user’s password will be protected using Amplify Cognito
+2. The app will be tested using Espresso
 
 ## Data Flow 
-Describe the flow of data in your application. 
-Write out what happens from the time the user enters the app to the time the request process completes (The user is done with the app). 
-Think about the “Happy Path” of the application. 
-Describe through visuals and text what requests are made, and what data is received, in addition to any other details about how the user moves through the site.
-_____ Insert Data Flow picture ________
+A user opens the app and signs in. If there is no active game a new game will start when there are at least two users signed in. The user leaves the game by signing out of the app.
+
+![Data Flow Sketch]()
