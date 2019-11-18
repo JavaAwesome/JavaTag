@@ -1,103 +1,80 @@
 # this is an auto generated file. This will be overwritten
-query GetBlog($id: ID!) {
-  getBlog(id: $id) {
-    id
-    name
-    posts {
-      items {
-        id
-        title
-      }
-      nextToken
-    }
-  }
-}
-query ListBlogs(
-  $filter: ModelBlogFilterInput
-  $limit: Int
-  $nextToken: String
-) {
-  listBlogs(filter: $filter, limit: $limit, nextToken: $nextToken) {
-    items {
-      id
-      name
-      posts {
-        nextToken
-      }
-    }
-    nextToken
-  }
-}
-query GetPost($id: ID!) {
-  getPost(id: $id) {
+query GetSession($id: ID!) {
+  getSession(id: $id) {
     id
     title
-    blog {
-      id
-      name
-      posts {
-        nextToken
-      }
-    }
-    comments {
+    players {
       items {
         id
-        content
+        username
+        isIt
+        lat
+        lon
       }
       nextToken
     }
+    lat
+    lon
+    radius
   }
 }
-query ListPosts(
-  $filter: ModelPostFilterInput
+query ListSessions(
+  $filter: ModelSessionFilterInput
   $limit: Int
   $nextToken: String
 ) {
-  listPosts(filter: $filter, limit: $limit, nextToken: $nextToken) {
+  listSessions(filter: $filter, limit: $limit, nextToken: $nextToken) {
     items {
       id
       title
-      blog {
-        id
-        name
-      }
-      comments {
+      players {
         nextToken
       }
+      lat
+      lon
+      radius
     }
     nextToken
   }
 }
-query GetComment($id: ID!) {
-  getComment(id: $id) {
+query GetPlayer($id: ID!) {
+  getPlayer(id: $id) {
     id
-    content
-    post {
+    username
+    session {
       id
       title
-      blog {
-        id
-        name
-      }
-      comments {
+      players {
         nextToken
       }
+      lat
+      lon
+      radius
     }
+    isIt
+    lat
+    lon
   }
 }
-query ListComments(
-  $filter: ModelCommentFilterInput
+query ListPlayers(
+  $filter: ModelPlayerFilterInput
   $limit: Int
   $nextToken: String
 ) {
-  listComments(filter: $filter, limit: $limit, nextToken: $nextToken) {
+  listPlayers(filter: $filter, limit: $limit, nextToken: $nextToken) {
     items {
       id
-      content
-      post {
+      username
+      session {
         id
         title
+        lat
+        lon
+        radius
       }
+      isIt
+      lat
+      lon
     }
     nextToken
   }

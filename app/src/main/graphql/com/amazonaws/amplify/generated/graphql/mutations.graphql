@@ -1,151 +1,115 @@
 # this is an auto generated file. This will be overwritten
-mutation CreateBlog($input: CreateBlogInput!) {
-  createBlog(input: $input) {
-    id
-    name
-    posts {
-      items {
-        id
-        title
-      }
-      nextToken
-    }
-  }
-}
-mutation UpdateBlog($input: UpdateBlogInput!) {
-  updateBlog(input: $input) {
-    id
-    name
-    posts {
-      items {
-        id
-        title
-      }
-      nextToken
-    }
-  }
-}
-mutation DeleteBlog($input: DeleteBlogInput!) {
-  deleteBlog(input: $input) {
-    id
-    name
-    posts {
-      items {
-        id
-        title
-      }
-      nextToken
-    }
-  }
-}
-mutation CreatePost($input: CreatePostInput!) {
-  createPost(input: $input) {
+mutation CreateSession($input: CreateSessionInput!) {
+  createSession(input: $input) {
     id
     title
-    blog {
-      id
-      name
-      posts {
-        nextToken
-      }
-    }
-    comments {
+    players {
       items {
         id
-        content
+        username
+        isIt
+        lat
+        lon
       }
       nextToken
     }
+    lat
+    lon
+    radius
   }
 }
-mutation UpdatePost($input: UpdatePostInput!) {
-  updatePost(input: $input) {
+mutation UpdateSession($input: UpdateSessionInput!) {
+  updateSession(input: $input) {
     id
     title
-    blog {
-      id
-      name
-      posts {
-        nextToken
-      }
-    }
-    comments {
+    players {
       items {
         id
-        content
+        username
+        isIt
+        lat
+        lon
       }
       nextToken
     }
+    lat
+    lon
+    radius
   }
 }
-mutation DeletePost($input: DeletePostInput!) {
-  deletePost(input: $input) {
+mutation DeleteSession($input: DeleteSessionInput!) {
+  deleteSession(input: $input) {
     id
     title
-    blog {
-      id
-      name
-      posts {
-        nextToken
-      }
-    }
-    comments {
+    players {
       items {
         id
-        content
+        username
+        isIt
+        lat
+        lon
       }
       nextToken
     }
+    lat
+    lon
+    radius
   }
 }
-mutation CreateComment($input: CreateCommentInput!) {
-  createComment(input: $input) {
+mutation CreatePlayer($input: CreatePlayerInput!) {
+  createPlayer(input: $input) {
     id
-    content
-    post {
+    username
+    session {
       id
       title
-      blog {
-        id
-        name
-      }
-      comments {
+      players {
         nextToken
       }
+      lat
+      lon
+      radius
     }
+    isIt
+    lat
+    lon
   }
 }
-mutation UpdateComment($input: UpdateCommentInput!) {
-  updateComment(input: $input) {
+mutation UpdatePlayer($input: UpdatePlayerInput!) {
+  updatePlayer(input: $input) {
     id
-    content
-    post {
+    username
+    session {
       id
       title
-      blog {
-        id
-        name
-      }
-      comments {
+      players {
         nextToken
       }
+      lat
+      lon
+      radius
     }
+    isIt
+    lat
+    lon
   }
 }
-mutation DeleteComment($input: DeleteCommentInput!) {
-  deleteComment(input: $input) {
+mutation DeletePlayer($input: DeletePlayerInput!) {
+  deletePlayer(input: $input) {
     id
-    content
-    post {
+    username
+    session {
       id
       title
-      blog {
-        id
-        name
-      }
-      comments {
+      players {
         nextToken
       }
+      lat
+      lon
+      radius
     }
+    isIt
+    lat
+    lon
   }
 }
