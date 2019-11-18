@@ -1,14 +1,19 @@
 {
     "local": {
         "awscloudformation": {
-            "AuthRoleName": "amplify-tag-local-110415-authRole",
-            "UnauthRoleArn": "arn:aws:iam::172039849171:role/amplify-tag-local-110415-unauthRole",
-            "AuthRoleArn": "arn:aws:iam::172039849171:role/amplify-tag-local-110415-authRole",
+            "AuthRoleName": "amplify-javatag-local-112001-authRole",
+            "UnauthRoleArn": "arn:aws:iam::798671911408:role/amplify-javatag-local-112001-unauthRole",
+            "AuthRoleArn": "arn:aws:iam::798671911408:role/amplify-javatag-local-112001-authRole",
             "Region": "us-west-2",
-            "DeploymentBucketName": "amplify-tag-local-110415-deployment",
-            "UnauthRoleName": "amplify-tag-local-110415-unauthRole",
-            "StackName": "amplify-tag-local-110415",
-            "StackId": "arn:aws:cloudformation:us-west-2:172039849171:stack/amplify-tag-local-110415/3667b760-0a36-11ea-9296-0a215a6b10fe"
+            "DeploymentBucketName": "amplify-javatag-local-112001-deployment",
+            "UnauthRoleName": "amplify-javatag-local-112001-unauthRole",
+            "StackName": "amplify-javatag-local-112001",
+            "StackId": "arn:aws:cloudformation:us-west-2:798671911408:stack/amplify-javatag-local-112001/6ae1ca10-0a38-11ea-93e5-0a13a2454304"
+        },
+        "categories": {
+            "auth": {
+                "javatagcc3c0915": {}
+            }
         }
     }
 }
