@@ -29,6 +29,10 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 
+    //Google Services
+    implementation 'com.google.android.gms:play-services-maps:16.1.0'
+    implementation 'com.google.android.gms:play-services-location:15.0.1'
+
     //Base SDK
     implementation 'com.amazonaws:aws-android-sdk-core:2.15.+'
     //AppSync SDK
