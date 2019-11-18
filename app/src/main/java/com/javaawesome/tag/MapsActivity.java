@@ -103,7 +103,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         };
 
-        mFusedLocationClient.requestLocationUpdates(getLocationRequest(), mLocationCallback, null);
+//        mFusedLocationClient.requestLocationUpdates(getLocationRequest(), mLocationCallback, null);
     }
 
     @Override
@@ -115,7 +115,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onResume() {
         super.onResume();
-        startLocationUpdates();
     }
 
     /**
@@ -131,10 +130,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        mMap.setMyLocationEnabled(true);
         mMap.setOnMyLocationButtonClickListener(this);
         mMap.setOnMyLocationClickListener(this);
-
 
 //      Add a marker in center of game camera and move the camera
 //        mMap.addMarker(new MarkerOptions().position(startingPoint).title("Game Center").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
@@ -148,7 +145,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .strokeWidth(5));
 
         initializeMarkersAndCirclesForPlayers(gameSession.getPlayers());
-
+        startLocationUpdates();
     }
 
     @Override
@@ -175,7 +172,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void startLocationUpdates() {
-        mFusedLocationClient.requestLocationUpdates(getLocationRequest(), mLocationCallback, Looper.getMainLooper());
+        mFusedLocationClient.requestLocationUpdates(getLocationRequest(), mLocationCallback, null);
+        mMap.setMyLocationEnabled(true);
     }
 
     private void initializeMarkersAndCirclesForPlayers(List<Player> players) {
