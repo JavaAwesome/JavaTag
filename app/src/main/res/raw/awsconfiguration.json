@@ -3,5 +3,30 @@
     "Version": "0.1.0",
     "IdentityManager": {
         "Default": {}
+    },
+    "AppSync": {
+        "Default": {
+            "ApiUrl": "https://s2xa7o2lendedjcxrd4z3vvojq.appsync-api.us-west-2.amazonaws.com/graphql",
+            "Region": "us-west-2",
+            "AuthMode": "API_KEY",
+            "ApiKey": "da2-ckhoucqjrrav5ojwwukjc5rcoi",
+            "ClientDatabasePrefix": "javatag_API_KEY"
+        }
+    },
+    "CredentialsProvider": {
+        "CognitoIdentity": {
+            "Default": {
+                "PoolId": "us-west-2:f8bc8a52-738b-4b6a-9e1c-339776783360",
+                "Region": "us-west-2"
+            }
+        }
+    },
+    "CognitoUserPool": {
+        "Default": {
+            "PoolId": "us-west-2_A7IkVRaoD",
+            "AppClientId": "3rpqns21b9n7n0poa8pagse4am",
+            "AppClientSecret": "4q88ohordervikv65kv2tru8e5fmnf63t4vf0aa5r8nnndbdhp2",
+            "Region": "us-west-2"
+        }
     }
 }

@@ -1,4 +1,4 @@
-package com.java401.tag;
+package com.javaawesome.tag;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.CameraInfo;
@@ -19,6 +19,9 @@ public class ShowMeYourFace extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_me_your_face);
+
+
+
 
         try {
             CameraInfo cameraInfo = CameraX.getCameraInfo(currentCameraLensFacing);
