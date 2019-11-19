@@ -12,6 +12,6 @@ public class picturePreview extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_picture_preview);
 
-        ImageView profilePicPreview
+        ImageView profilePicPreview;
     }
 }

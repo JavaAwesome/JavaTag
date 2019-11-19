@@ -62,14 +62,14 @@ public class ShowMeYourFace extends AppCompatActivity {
             }
         }else {
 
-            PreviewConfig config = new PreviewConfig.Builder()
+            PreviewConfig config = new PreviewConfig.Builder().setLensFacing(CameraX.LensFacing.FRONT)
 //                    Allow the camera to rotate???
                     .setTargetRotation(getWindowManager().getDefaultDisplay().getRotation())
                     .build();
 
             Preview preview = new Preview(config);
 //      Set the display view for the camera preview
-            TextureView textureView = findViewById(R.id.view_finder);
+            final TextureView textureView = findViewById(R.id.view_finder);
 
             preview.setOnPreviewOutputUpdateListener(new Preview.OnPreviewOutputUpdateListener() {
                 @Override
@@ -110,8 +110,8 @@ public class ShowMeYourFace extends AppCompatActivity {
                                new ImageCapture.OnImageCapturedListener() {
 
                                     public void onCaptureSuccess(ImageProxy image, int rotationDegrees){
-//                                        send photo to a new view to accept or deny
-                                        
+                                        Log.i(TAG, "onCaptureSuccess: registered a camera click!");
+                                        image.getImage();
                                        }
 
 
