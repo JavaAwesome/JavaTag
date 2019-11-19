@@ -301,8 +301,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 continue;
             }
             if (isTagged(player)) {
-                //TODO: Add notifications here
                 Toast.makeText(this, "" + player.getUsername() + " is now it!!!", Toast.LENGTH_SHORT);
+                // new view activated. User hits button that confirms they know, onDestroy takes them back to the map (or wherever they were)
+                //TODO: If future views added to app, may need to change "this"?
+                startActivity(new Intent(MapsActivity.this, NotificationActivity.class));
                 return;
             }
         }

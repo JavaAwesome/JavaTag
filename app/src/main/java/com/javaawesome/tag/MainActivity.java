@@ -154,6 +154,13 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
 
     }
 
+    //////// TEST BUTTON /////
+    public void onTestyClick(View view) {
+        startActivity(new Intent(MainActivity.this, NotificationActivity.class));
+    }
+
+    /////////////
+
     // Direct users to sign in page
     private void signInUser() {
         AWSMobileClient.getInstance().showSignIn(MainActivity.this,
