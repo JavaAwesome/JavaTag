@@ -5,6 +5,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
+import android.icu.text.RelativeDateTimeFormatter;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
@@ -85,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         sessions = new LinkedList<>();
 
         // initialize recycler view to display nearby game sessions
+        // TODO: have recycler view filter sessions by distance to user
         recyclerNearbySessions = findViewById(R.id.recycler_nearby_sessions);
         recyclerNearbySessions.setLayoutManager(new LinearLayoutManager(this));
         this.sessionAdapter = new SessionAdapter(this.sessions, this);
@@ -100,6 +102,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
 
     //
     public void goToMap(View view) {
+        // TODO: check if player already exist in the database
         EditText sessionName = findViewById(R.id.editText_session_name);
         CreateSessionInput input = CreateSessionInput.builder()
                 .title(sessionName.getText().toString())
@@ -210,8 +213,17 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
     private void getCurrentUserLocation() {
         fusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
             @Override
-            public void onSuccess(Location location) {
-                currentUserLocation = new LatLng(location.getLatitude(), location.getLongitude());
+            public void onSuccess(final Location location) {
+                Log.i(TAG, "this is location " + location.toString());
+                if (location != null) {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            currentUserLocation = new LatLng(location.getLatitude(), location.getLongitude());
+                        }
+                    }).run();
+
+                }
             }
         });
     }
