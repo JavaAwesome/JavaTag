@@ -66,6 +66,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     float notItHue = BitmapDescriptorFactory.HUE_GREEN;
     List<Player> players;
     private final String TAG = "javatag";
+    String playerID;
+    Player player;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,6 +94,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         String sessionId = getIntent().getStringExtra("sessionId");
         Log.i(TAG, "Session ID for map is: " + sessionId);
         queryForSelectedSession(sessionId);
+
+
+        // Pull user ID from MainActivity
+        playerID = getIntent().getStringExtra("userID");
+        // If player comes from the recyclerView it will come through as null so we will create a new player
+        // Else the player created the game and we will query the player object
+        if (playerID == null) {
+            createPlayer();
+        } else {
+            queryForPlayerObject();
+        }
 
         mLocationCallback = new LocationCallback() {
             @Override
