@@ -1,6 +1,7 @@
 package com.javaawesome.tag;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -42,6 +43,9 @@ import javax.annotation.Nonnull;
 import type.CreatePlayerInput;
 import type.CreateSessionInput;
 
+import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
+import static android.Manifest.permission.ACCESS_FINE_LOCATION;
+
 public class MainActivity extends AppCompatActivity implements SessionAdapter.OnSessionInteractionListener {
 
     private final String TAG = "javatag";
@@ -57,6 +61,8 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        ActivityCompat.requestPermissions(this, new String[]{ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION}, 10);
 
         // initialize aws mobile client and check if you are logged in or not
         AWSMobileClient.getInstance().initialize(getApplicationContext(), new Callback<UserStateDetails>() {
@@ -110,7 +116,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
                 .lon(currentUserLocation.longitude)
 //                .lat(47.608013) // geocoder things :slightly_smiling_face:
 //                .lon(-122.335167)
-                .radius(50)
+                .radius(500)
                 .build();
         CreateSessionMutation createSessionMutation = CreateSessionMutation.builder().input(input).build();
         awsAppSyncClient.mutate(createSessionMutation).enqueue(new GraphQLCall.Callback<CreateSessionMutation.Data>() {
@@ -195,6 +201,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
             Handler h = new Handler(Looper.getMainLooper()) {
                 @Override
                 public void handleMessage(Message inputMessage) {
+                    sessions.clear();
                     sessions.addAll(response.data().listSessions().items());
                     Log.i(TAG, sessions.toString());
                     sessionAdapter.notifyDataSetChanged();

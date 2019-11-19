@@ -1,5 +1,6 @@
 package com.javaawesome.tag;
 
+import com.amazonaws.amplify.generated.graphql.GetSessionQuery;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -8,7 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class Player {
-    private long id;
+    private String id;
     private String username;
     private Session gameSession;
     private boolean isIt;
@@ -23,7 +24,16 @@ public class Player {
         this.locations = new LinkedList<>();
     }
 
-    public long getId() {
+    public Player(GetSessionQuery.Item item){
+        this.id = item.id();
+        this.username = item.username();
+        this.gameSession = null;
+        this.isIt = item.isIt();
+        locations = new LinkedList<>();
+        locations.add(new LatLng(item.lat(), item.lon()));
+    }
+
+    public String getId() {
         return id;
     }
 
@@ -51,6 +61,35 @@ public class Player {
 
     public void addLocations(LatLng location) {
         this.locations.add(location);
+    }
+
+    public Marker getMarker() {
+        return marker;
+    }
+
+    public void setMarker(Marker marker) {
+        this.marker = marker;
+    }
+
+    public Circle getCircle() {
+        return circle;
+    }
+
+    public void setCircle(Circle circle) {
+        this.circle = circle;
+    }
+
+    @Override
+    public String toString() {
+        return "Player{" +
+                "id='" + id + '\'' +
+                ", username='" + username + '\'' +
+                ", gameSession=" + gameSession +
+                ", isIt=" + isIt +
+                ", locations=" + locations +
+                ", marker=" + marker +
+                ", circle=" + circle +
+                '}';
     }
 }
 
