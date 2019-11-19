@@ -1,16 +1,17 @@
-type Blog @model {
-  id: ID!
-  name: String!
-  posts: [Post] @connection(name: "BlogPosts")
-}
-type Post @model {
+type Session @model {
   id: ID!
   title: String!
-  blog: Blog @connection(name: "BlogPosts")
-  comments: [Comment] @connection(name: "PostComments")
+  players: [Player] @connection(name: "Players")
+  lat: Float!
+  lon: Float!
+  radius: Int!
 }
-type Comment @model {
+
+type Player @model {
   id: ID!
-  content: String
-  post: Post @connection(name: "PostComments")
+  username: String!
+  session: Session @connection(name: "Players")
+  isIt: Boolean!
+  lat: Float!
+  lon: Float!
 }

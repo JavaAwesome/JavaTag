@@ -1,151 +1,115 @@
 # this is an auto generated file. This will be overwritten
-subscription OnCreateBlog {
-  onCreateBlog {
-    id
-    name
-    posts {
-      items {
-        id
-        title
-      }
-      nextToken
-    }
-  }
-}
-subscription OnUpdateBlog {
-  onUpdateBlog {
-    id
-    name
-    posts {
-      items {
-        id
-        title
-      }
-      nextToken
-    }
-  }
-}
-subscription OnDeleteBlog {
-  onDeleteBlog {
-    id
-    name
-    posts {
-      items {
-        id
-        title
-      }
-      nextToken
-    }
-  }
-}
-subscription OnCreatePost {
-  onCreatePost {
+subscription OnCreateSession {
+  onCreateSession {
     id
     title
-    blog {
-      id
-      name
-      posts {
-        nextToken
-      }
-    }
-    comments {
+    players {
       items {
         id
-        content
+        username
+        isIt
+        lat
+        lon
       }
       nextToken
     }
+    lat
+    lon
+    radius
   }
 }
-subscription OnUpdatePost {
-  onUpdatePost {
+subscription OnUpdateSession {
+  onUpdateSession {
     id
     title
-    blog {
-      id
-      name
-      posts {
-        nextToken
-      }
-    }
-    comments {
+    players {
       items {
         id
-        content
+        username
+        isIt
+        lat
+        lon
       }
       nextToken
     }
+    lat
+    lon
+    radius
   }
 }
-subscription OnDeletePost {
-  onDeletePost {
+subscription OnDeleteSession {
+  onDeleteSession {
     id
     title
-    blog {
-      id
-      name
-      posts {
-        nextToken
-      }
-    }
-    comments {
+    players {
       items {
         id
-        content
+        username
+        isIt
+        lat
+        lon
       }
       nextToken
     }
+    lat
+    lon
+    radius
   }
 }
-subscription OnCreateComment {
-  onCreateComment {
+subscription OnCreatePlayer {
+  onCreatePlayer {
     id
-    content
-    post {
+    username
+    session {
       id
       title
-      blog {
-        id
-        name
-      }
-      comments {
+      players {
         nextToken
       }
+      lat
+      lon
+      radius
     }
+    isIt
+    lat
+    lon
   }
 }
-subscription OnUpdateComment {
-  onUpdateComment {
+subscription OnUpdatePlayer {
+  onUpdatePlayer {
     id
-    content
-    post {
+    username
+    session {
       id
       title
-      blog {
-        id
-        name
-      }
-      comments {
+      players {
         nextToken
       }
+      lat
+      lon
+      radius
     }
+    isIt
+    lat
+    lon
   }
 }
-subscription OnDeleteComment {
-  onDeleteComment {
+subscription OnDeletePlayer {
+  onDeletePlayer {
     id
-    content
-    post {
+    username
+    session {
       id
       title
-      blog {
-        id
-        name
-      }
-      comments {
+      players {
         nextToken
       }
+      lat
+      lon
+      radius
     }
+    isIt
+    lat
+    lon
   }
 }
