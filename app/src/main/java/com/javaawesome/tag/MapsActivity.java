@@ -5,6 +5,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -16,6 +17,13 @@ import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.amazonaws.amplify.generated.graphql.GetSessionQuery;
+import com.amazonaws.mobile.config.AWSConfiguration;
+import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient;
+import com.amazonaws.mobileconnectors.appsync.fetcher.AppSyncResponseFetchers;
+import com.apollographql.apollo.GraphQLCall;
+import com.apollographql.apollo.api.Response;
+import com.apollographql.apollo.exception.ApolloException;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -36,9 +44,14 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMyLocationClickListener {
 
     private GoogleMap mMap;
+    AWSAppSyncClient awsAppSyncClient;
+    GetSessionQuery.GetSession currentSession;
+
     LatLng startingPoint;
     Session gameSession;
     final static long REFRESHRATE = 3*1000;
@@ -55,7 +68,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     float notItHue = BitmapDescriptorFactory.HUE_GREEN;
     List<Marker> playerMarkers;
     List<Circle> playerCircles;
-    private final String TAG = "thequangnguyen";
+    List<Player> players;
+    private final String TAG = "javatag";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,8 +80,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        // asks users for permissions
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
+
+        // initialize connection with google location services
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
+        // establish connection to AWS
+        awsAppSyncClient = AWSAppSyncClient.builder()
+                .context(getApplicationContext())
+                .awsConfiguration(new AWSConfiguration(getApplicationContext()))
+                .build();
+
+        // get the session that user selected from mainactivity
+        String sessionId = getIntent().getStringExtra("sessionId");
+        Log.i(TAG, "Session ID for map is: " + sessionId);
+        queryForSelectedSession(sessionId);
 
         playerMarkers = new LinkedList<>();
         playerCircles = new LinkedList<>();
@@ -103,6 +131,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         };
 
+
 //        mFusedLocationClient.requestLocationUpdates(getLocationRequest(), mLocationCallback, null);
     }
 
@@ -133,18 +162,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setOnMyLocationButtonClickListener(this);
         mMap.setOnMyLocationClickListener(this);
 
-//      Add a marker in center of game camera and move the camera
-//        mMap.addMarker(new MarkerOptions().position(startingPoint).title("Game Center").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
-        mMap.moveCamera(CameraUpdateFactory.zoomTo(16));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(startingPoint));
-        Circle gameBounds = mMap.addCircle(new CircleOptions()
-                .center(startingPoint)
-                .radius(gameSession.getRadius())
-                .strokeColor(Color.YELLOW)
-                .fillColor(Color.TRANSPARENT)
-                .strokeWidth(5));
-
-        initializeMarkersAndCirclesForPlayers(gameSession.getPlayers());
+        //TODO: Still need to send the player's location to DB on a timer for updates
         startLocationUpdates();
     }
 
@@ -196,8 +214,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 circle.setStrokeColor(notItColor);
             }
 
-            playerMarkers.add(marker);
-            playerCircles.add(circle);
+            player.setCircle(circle);
+            player.setMarker(marker);
+
+            //      Add a marker in center of game camera and move the camera
+//        mMap.addMarker(new MarkerOptions().position(startingPoint).title("Game Center").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
+            mMap.moveCamera(CameraUpdateFactory.zoomTo(16));
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(startingPoint));
+            Circle gameBounds = mMap.addCircle(new CircleOptions()
+                    .center(startingPoint)
+                    .radius(currentSession.radius())
+                    .strokeColor(Color.YELLOW)
+                    .fillColor(Color.TRANSPARENT)
+                    .strokeWidth(5));
+
 
 //            playerMarkers.add(mMap.addMarker(new MarkerOptions()
 //                    .position(player.getLocations().get(index))
@@ -218,6 +248,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             playerMarkers.get(i).setPosition(players.get(i).getLocations().get(index));
             playerCircles.get(i).setCenter(players.get(i).getLocations().get(index));
             checkForTag();
+            //TODO: add notifications based on tag changes
             if (players.get(i).isIt()) {
                 playerMarkers.get(i).setIcon(BitmapDescriptorFactory.defaultMarker(itHue));
                 playerCircles.get(i).setStrokeColor(itColor);
@@ -270,9 +301,55 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 continue;
             }
             if (isTagged(player)) {
+                //TODO: Add notifications here
                 Toast.makeText(this, "" + player.getUsername() + " is now it!!!", Toast.LENGTH_SHORT);
                 return;
             }
         }
     }
+
+    // query for the session associated with the sessionId that was passed from MainActivity
+    private void queryForSelectedSession(String sessionId) {
+        GetSessionQuery getSessionQuery =GetSessionQuery.builder().id(sessionId).build();
+        awsAppSyncClient.query(getSessionQuery)
+                .responseFetcher(AppSyncResponseFetchers.NETWORK_ONLY)
+                .enqueue(getSessionCallBack);
+    }
+
+    // Callback to get current game session
+    private GraphQLCall.Callback<GetSessionQuery.Data> getSessionCallBack = new GraphQLCall.Callback<GetSessionQuery.Data>() {
+        @Override
+        public void onResponse(@Nonnull final Response<GetSessionQuery.Data> response) {
+            currentSession = response.data().getSession();
+
+            //converting from GetSessionItems to players
+            players = playerConverter(currentSession.players().items());
+            Handler h = new Handler(Looper.getMainLooper()){
+                @Override
+                public void handleMessage(Message inputMessage){
+                    //lat and long for the session
+                    startingPoint = new LatLng(currentSession.lat(), currentSession.lon());
+                    initializeMarkersAndCirclesForPlayers(players);
+
+                }
+            };
+            h.obtainMessage().sendToTarget();
+        }
+
+        @Override
+        public void onFailure(@Nonnull ApolloException e) {
+            Log.e(TAG, "error from getSessionQuery: " + e.getMessage());
+        }
+    };
+
+
+
+    private List<Player> playerConverter(List<GetSessionQuery.Item> incomingList){
+        List<Player> outGoingList = new LinkedList<>();
+        for(GetSessionQuery.Item item : incomingList){
+            Player newPlayer = new Player(item);
+            outGoingList.add(newPlayer);
+        }
+        return outGoingList;
+    };
 }
