@@ -78,9 +78,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        // asks users for permissions
-        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
-
         // initialize connection with google location services
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
@@ -127,7 +124,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 updateMarkerAndCircleForAllPlayers(gameSession.getPlayers());
             }
         };
-
 //        mFusedLocationClient.requestLocationUpdates(getLocationRequest(), mLocationCallback, null);
     }
 
@@ -236,7 +232,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-
     private void updateMarkerAndCircleForAllPlayers(List<Player> players) {
         index++;
         for (int i = 0; i < players.size(); i++) {
@@ -321,4 +316,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Log.e(TAG, "error from getSessionQuery: " + e.getMessage());
         }
     };
+
+
 }

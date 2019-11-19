@@ -1,9 +1,11 @@
 package com.javaawesome.tag;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.Manifest;
 import android.content.Intent;
 import android.icu.text.RelativeDateTimeFormatter;
 import android.location.Location;
@@ -57,6 +59,9 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // asks users for permissions
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
 
         // initialize aws mobile client and check if you are logged in or not
         AWSMobileClient.getInstance().initialize(getApplicationContext(), new Callback<UserStateDetails>() {
@@ -222,7 +227,6 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
                             currentUserLocation = new LatLng(location.getLatitude(), location.getLongitude());
                         }
                     }).run();
-
                 }
             }
         });
