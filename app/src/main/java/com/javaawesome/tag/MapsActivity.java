@@ -101,9 +101,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // If player comes from the recyclerView it will come through as null so we will create a new player
         // Else the player created the game and we will query the player object
         if (playerID == null) {
-            createPlayer();
+//            createPlayer();
         } else {
-            queryForPlayerObject();
+//            queryForPlayerObject();
         }
 
         mLocationCallback = new LocationCallback() {
@@ -280,15 +280,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+
     private boolean checkForTag(Player player) {
         if (player.isIt()) {
             return false;
         }
         for(Player itPlayer : itPlayers) {
             if (isTagged(player, itPlayer)) {
-                //TODO: Add notifications here
-                Toast.makeText(this, "" + player.getUsername() + " is now it!!!", Toast.LENGTH_SHORT);
+//                Toast.makeText(this, "" + player.getUsername() + " is now it!!!", Toast.LENGTH_SHORT);
+                //TODO: If future views added to app, may need to change "this"?
+                startActivity(new Intent(MapsActivity.this, NotificationActivity.class));
                 return true;
+
             }
         }
         return false;
