@@ -131,8 +131,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         };
 
-
 //        mFusedLocationClient.requestLocationUpdates(getLocationRequest(), mLocationCallback, null);
+    }
+
+    private void sendUserLocationQuery() {
+
     }
 
     @Override
@@ -177,6 +180,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return false;
     }
 
+    // Called in startLocationUpdates to pull location updates from the DB
     private LocationRequest getLocationRequest() {
         LocationRequest locationRequest = new LocationRequest();
         locationRequest.setInterval(10000);
@@ -189,11 +193,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mFusedLocationClient.removeLocationUpdates(mLocationCallback);
     }
 
+    // Starts pulling location updates from the DB
     private void startLocationUpdates() {
         mFusedLocationClient.requestLocationUpdates(getLocationRequest(), mLocationCallback, null);
         mMap.setMyLocationEnabled(true);
     }
 
+    // Creates markers and circles for each player in the list for that session
     private void initializeMarkersAndCirclesForPlayers(List<Player> players) {
         for(Player player: players) {
             Marker marker = mMap.addMarker(new MarkerOptions()
@@ -352,4 +358,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         return outGoingList;
     };
+
+    // TODO: Build onDestroy that deletes user data from DB
+
 }
