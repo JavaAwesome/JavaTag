@@ -62,7 +62,7 @@ public class ShowMeYourFace extends AppCompatActivity {
             }
         }else {
 
-            PreviewConfig config = new PreviewConfig.Builder()
+            PreviewConfig config = new PreviewConfig.Builder().setLensFacing(CameraX.LensFacing.FRONT)
 //                    Allow the camera to rotate???
                     .setTargetRotation(getWindowManager().getDefaultDisplay().getRotation())
                     .build();
