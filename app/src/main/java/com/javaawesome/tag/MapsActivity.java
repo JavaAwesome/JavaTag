@@ -131,6 +131,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         };
 
+
 //        mFusedLocationClient.requestLocationUpdates(getLocationRequest(), mLocationCallback, null);
     }
 
@@ -161,17 +162,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setOnMyLocationButtonClickListener(this);
         mMap.setOnMyLocationClickListener(this);
 
-////      Add a marker in center of game camera and move the camera
-////        mMap.addMarker(new MarkerOptions().position(startingPoint).title("Game Center").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
-//        mMap.moveCamera(CameraUpdateFactory.zoomTo(16));
-//        mMap.moveCamera(CameraUpdateFactory.newLatLng(startingPoint));
-//        Circle gameBounds = mMap.addCircle(new CircleOptions()
-//                .center(startingPoint)
-//                .radius(gameSession.getRadius())
-//                .strokeColor(Color.YELLOW)
-//                .fillColor(Color.TRANSPARENT)
-//                .strokeWidth(5));
-
+        //TODO: Still need to send the player's location to DB on a timer for updates
         startLocationUpdates();
     }
 
@@ -257,6 +248,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             playerMarkers.get(i).setPosition(players.get(i).getLocations().get(index));
             playerCircles.get(i).setCenter(players.get(i).getLocations().get(index));
             checkForTag();
+            //TODO: add notifications based on tag changes
             if (players.get(i).isIt()) {
                 playerMarkers.get(i).setIcon(BitmapDescriptorFactory.defaultMarker(itHue));
                 playerCircles.get(i).setStrokeColor(itColor);
@@ -309,6 +301,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 continue;
             }
             if (isTagged(player)) {
+                //TODO: Add notifications here
                 Toast.makeText(this, "" + player.getUsername() + " is now it!!!", Toast.LENGTH_SHORT);
                 return;
             }
@@ -328,10 +321,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         @Override
         public void onResponse(@Nonnull final Response<GetSessionQuery.Data> response) {
             currentSession = response.data().getSession();
+
+            //converting from GetSessionItems to players
             players = playerConverter(currentSession.players().items());
             Handler h = new Handler(Looper.getMainLooper()){
                 @Override
                 public void handleMessage(Message inputMessage){
+                    //lat and long for the session
                     startingPoint = new LatLng(currentSession.lat(), currentSession.lon());
                     initializeMarkersAndCirclesForPlayers(players);
 
