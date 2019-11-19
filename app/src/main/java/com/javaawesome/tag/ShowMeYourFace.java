@@ -6,6 +6,7 @@ import androidx.camera.core.CameraInfoUnavailableException;
 import androidx.camera.core.CameraX;
 import androidx.camera.core.ImageCapture;
 import androidx.camera.core.ImageCaptureConfig;
+import androidx.camera.core.ImageProxy;
 import androidx.camera.core.Preview;
 import androidx.camera.core.PreviewConfig;
 import androidx.core.app.ActivityCompat;
@@ -17,10 +18,12 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 
 import java.io.File;
 import java.util.concurrent.Executor;
@@ -30,11 +33,18 @@ public class ShowMeYourFace extends AppCompatActivity {
     private static final String TAG = "ahren:javatag";
     private ImageCapture imageCapture;
 
+    private void goToPicPreview(View view){
+        Intent goToPicturePreview = new Intent(this, picturePreview.class);
+        this.startActivity(goToPicturePreview);
+    }
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_me_your_face);
+
 
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.CAMERA)
@@ -52,9 +62,13 @@ public class ShowMeYourFace extends AppCompatActivity {
             }
         }else {
 
-            PreviewConfig config = new PreviewConfig.Builder().build();
-            Preview preview = new Preview(config);
+            PreviewConfig config = new PreviewConfig.Builder()
+//                    Allow the camera to rotate???
+                    .setTargetRotation(getWindowManager().getDefaultDisplay().getRotation())
+                    .build();
 
+            Preview preview = new Preview(config);
+//      Set the display view for the camera preview
             TextureView textureView = findViewById(R.id.view_finder);
 
             preview.setOnPreviewOutputUpdateListener(new Preview.OnPreviewOutputUpdateListener() {
@@ -64,13 +78,10 @@ public class ShowMeYourFace extends AppCompatActivity {
                     textureView.setSurfaceTexture(previewOutput.getSurfaceTexture());
                     // and post to a GL renderer.
                 }
-
             });
 
 
             CameraX.bindToLifecycle(this, preview);
-
-
 
             ImageCaptureConfig config2 =
                     new ImageCaptureConfig.Builder()
@@ -79,13 +90,15 @@ public class ShowMeYourFace extends AppCompatActivity {
 
            imageCapture = new ImageCapture(config2);
 
+//      Causes camera u=instance to only exist on this activity is started and destroyed on start and finish
             CameraX.bindToLifecycle(this, imageCapture, preview);
 
             Button picSnap = findViewById(R.id.picSnap);
             picSnap.setOnClickListener(new View.OnClickListener() {
                    @Override
                    public void onClick(View event) {
-                       File profilePhoto = new File("userPicture.jpg");
+//                       File profilePic = new File("./");
+
                        Executor executor = new Executor() {
                            @Override
                            public void execute(Runnable runnable) {
@@ -93,18 +106,18 @@ public class ShowMeYourFace extends AppCompatActivity {
                            }
                        };
 
-                       imageCapture.takePicture(file, executor,
-                               new ImageCapture.OnImageSavedListener() {
-                                   @Override
-                                   public void onImageSaved(File file) {
-                                       // insert your code here.
-                                   }
+                       imageCapture.takePicture(executor,
+                               new ImageCapture.OnImageCapturedListener() {
+
+                                    public void onCaptureSuccess(ImageProxy image, int rotationDegrees){
+//                                        send photo to a new view to accept or deny
+                                        
+                                       }
+
 
                                    @Override
                                    public void onError(
-                                           ImageCapture.ImageCaptureError imageCaptureError,
-                                           String message,
-                                           Throwable cause) {
+                                           ImageCapture.ImageCaptureError imageCaptureError, String message, Throwable cause) {
                                        // insert your code here.
 
                                    }
@@ -128,6 +141,7 @@ public class ShowMeYourFace extends AppCompatActivity {
 //        }}
         }
     }
+
 
 
 }
