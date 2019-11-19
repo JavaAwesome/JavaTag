@@ -53,23 +53,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     GetSessionQuery.GetSession currentSession;
 
     LatLng startingPoint;
-    Session gameSession;
     final static long REFRESHRATE = 3*1000;
     final static int SUBJECT = 0;
     Handler locationHandler;
-    private int index = 0;
     LocationCallback mLocationCallback;
     private FusedLocationProviderClient mFusedLocationClient;
     final private int tagDistance = 50;
-    Player itPlayer;
+    List<Player> itPlayers;
     int itColor = Color.RED;
     int notItColor = Color.GREEN;
     float itHue = BitmapDescriptorFactory.HUE_RED;
     float notItHue = BitmapDescriptorFactory.HUE_GREEN;
-    List<Marker> playerMarkers;
-    List<Circle> playerCircles;
     List<Player> players;
     private final String TAG = "javatag";
+    String playerID;
+    Player player;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,29 +95,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Log.i(TAG, "Session ID for map is: " + sessionId);
         queryForSelectedSession(sessionId);
 
-        playerMarkers = new LinkedList<>();
-        playerCircles = new LinkedList<>();
 
-        startingPoint = new LatLng(47.653120, -122.351991);
-        gameSession = new Session("testing", startingPoint, 200);
-        Player me = new Player("Qyoung", gameSession);
-        Player picolas = new Player("Picolas", gameSession);
-
-        gameSession.addPlayer(me);
-        gameSession.addPlayer(picolas);
-        me.addLocations(new LatLng(47.653200, -122.352200));
-        picolas.addLocations(new LatLng(47.652300, -122.353100));
-        me.addLocations(new LatLng(47.653100, -122.352300));
-        picolas.addLocations(new LatLng(47.652400, -122.353000));
-        me.addLocations(new LatLng(47.653000, -122.352400));
-        picolas.addLocations(new LatLng(47.652500, -122.352900));
-        me.addLocations(new LatLng(47.652900, -122.352500));
-        picolas.addLocations(new LatLng(47.652600, -122.352800));
-        me.addLocations(new LatLng(47.652800, -122.352600));
-        picolas.addLocations(new LatLng(47.652700, -122.352700));
-
-        itPlayer = picolas;
-        picolas.setIt(true);
+        // Pull user ID from MainActivity
+        playerID = getIntent().getStringExtra("userID");
+        // If player comes from the recyclerView it will come through as null so we will create a new player
+        // Else the player created the game and we will query the player object
+        if (playerID == null) {
+            createPlayer();
+        } else {
+            queryForPlayerObject();
+        }
 
         mLocationCallback = new LocationCallback() {
             @Override
@@ -127,12 +112,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 if (locationResult == null) {
                     return;
                 }
-                updateMarkerAndCircleForAllPlayers(gameSession.getPlayers());
+                updateMarkerAndCircleForAllPlayers(players);
             }
         };
 
-
 //        mFusedLocationClient.requestLocationUpdates(getLocationRequest(), mLocationCallback, null);
+    }
+
+    private void sendUserLocationQuery() {
+
     }
 
     @Override
@@ -177,6 +165,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return false;
     }
 
+    // Called in startLocationUpdates to pull location updates from the DB
     private LocationRequest getLocationRequest() {
         LocationRequest locationRequest = new LocationRequest();
         locationRequest.setInterval(10000);
@@ -189,18 +178,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mFusedLocationClient.removeLocationUpdates(mLocationCallback);
     }
 
+    // Starts pulling location updates from the DB
     private void startLocationUpdates() {
         mFusedLocationClient.requestLocationUpdates(getLocationRequest(), mLocationCallback, null);
         mMap.setMyLocationEnabled(true);
     }
 
+    // Creates markers and circles for each player in the list for that session
     private void initializeMarkersAndCirclesForPlayers(List<Player> players) {
         for(Player player: players) {
             Marker marker = mMap.addMarker(new MarkerOptions()
-                    .position(player.getLocations().get(index))
+                    .position(player.getLastLocation())
                     .title(player.getUsername()));
             Circle circle = mMap.addCircle(new CircleOptions()
-                    .center(player.getLocations().get(index))
+                    .center(player.getLastLocation())
                     .radius(tagDistance)
                     .fillColor(Color.TRANSPARENT)
                     .strokeWidth(3));
@@ -218,46 +209,40 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             player.setMarker(marker);
 
             //      Add a marker in center of game camera and move the camera
-//        mMap.addMarker(new MarkerOptions().position(startingPoint).title("Game Center").icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
             mMap.moveCamera(CameraUpdateFactory.zoomTo(16));
             mMap.moveCamera(CameraUpdateFactory.newLatLng(startingPoint));
             Circle gameBounds = mMap.addCircle(new CircleOptions()
                     .center(startingPoint)
                     .radius(currentSession.radius())
-                    .strokeColor(Color.YELLOW)
+                    .strokeColor(Color.BLUE)
                     .fillColor(Color.TRANSPARENT)
                     .strokeWidth(5));
-
-
-//            playerMarkers.add(mMap.addMarker(new MarkerOptions()
-//                    .position(player.getLocations().get(index))
-//                    .title(player.getUsername()).icon(BitmapDescriptorFactory.defaultMarker(notItHue))));
-//            playerCircles.add(mMap.addCircle(new CircleOptions()
-//                    .center(player.getLocations().get(index))
-//                    .radius(tagDistance)
-//                    .strokeColor(notItColor)
-//                    .fillColor(Color.TRANSPARENT)
-//                    .strokeWidth(3)));
         }
     }
 
 
     private void updateMarkerAndCircleForAllPlayers(List<Player> players) {
-        index++;
-        for (int i = 0; i < players.size(); i++) {
-            playerMarkers.get(i).setPosition(players.get(i).getLocations().get(index));
-            playerCircles.get(i).setCenter(players.get(i).getLocations().get(index));
-            checkForTag();
-            //TODO: add notifications based on tag changes
-            if (players.get(i).isIt()) {
-                playerMarkers.get(i).setIcon(BitmapDescriptorFactory.defaultMarker(itHue));
-                playerCircles.get(i).setStrokeColor(itColor);
-            } else {
-                playerMarkers.get(i).setIcon(BitmapDescriptorFactory.defaultMarker(notItHue));
-                playerCircles.get(i).setStrokeColor(notItColor);
+        List<Player> playersJustGotTagged = new LinkedList<>();
+        for (Player player : players) {
+            player.getMarker().setPosition(player.getLastLocation());
+            player.getCircle().setCenter(player.getLastLocation());
+            if (checkForTag(player)) {
+                playersJustGotTagged.add(player);
+                player.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(itHue));
+                player.getCircle().setStrokeColor(itColor);
             }
 
+            //TODO: add notifications based on tag changes
+//            if (player.isIt()) {
+//                player.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(itHue));
+//                player.getCircle().setStrokeColor(itColor);
+//            } else {
+//                player.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(notItHue));
+//                player.getCircle().setStrokeColor(notItColor);
+//            }
         }
+
+        itPlayers.addAll(playersJustGotTagged);
     }
 
     // Equation is from https://stackoverflow.com/questions/639695/how-to-convert-latitude-or-longitude-to-meters
@@ -277,11 +262,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     // check if the player is tagged by the it player
     // check if the distance between the it player and the other player is less than the specified tag distance
-    private boolean isTagged(Player player) {
-        double distanceBetweenPlayers = distanceBetweenLatLongPoints(itPlayer.getLocations().get(index).latitude,
-                itPlayer.getLocations().get(index).longitude,
-                player.getLocations().get(index).latitude,
-                player.getLocations().get(index).longitude);
+    private boolean isTagged(Player player, Player itPlayer) {
+        double distanceBetweenPlayers = distanceBetweenLatLongPoints(itPlayer.getLastLocation().latitude,
+                itPlayer.getLastLocation().longitude,
+                player.getLastLocation().latitude,
+                player.getLastLocation().longitude);
 
         Log.i(TAG, "distance between players is " + distanceBetweenPlayers + " meters");
 
@@ -295,17 +280,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    private void checkForTag() {
-        for(Player player: gameSession.getPlayers()) {
-            if (player == itPlayer) {
-                continue;
-            }
-            if (isTagged(player)) {
+    private boolean checkForTag(Player player) {
+        if (player.isIt()) {
+            return false;
+        }
+        for(Player itPlayer : itPlayers) {
+            if (isTagged(player, itPlayer)) {
                 //TODO: Add notifications here
                 Toast.makeText(this, "" + player.getUsername() + " is now it!!!", Toast.LENGTH_SHORT);
-                return;
+                return true;
             }
         }
+        return false;
     }
 
     // query for the session associated with the sessionId that was passed from MainActivity
@@ -342,8 +328,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     };
 
-
-
     private List<Player> playerConverter(List<GetSessionQuery.Item> incomingList){
         List<Player> outGoingList = new LinkedList<>();
         for(GetSessionQuery.Item item : incomingList){
@@ -352,4 +336,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         return outGoingList;
     };
+
+    // TODO: Build onDestroy that deletes user data from DB
+
 }
