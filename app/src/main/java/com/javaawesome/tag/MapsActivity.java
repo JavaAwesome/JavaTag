@@ -16,6 +16,13 @@ import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.amazonaws.amplify.generated.graphql.GetSessionQuery;
+import com.amazonaws.mobile.config.AWSConfiguration;
+import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient;
+import com.amazonaws.mobileconnectors.appsync.fetcher.AppSyncResponseFetchers;
+import com.apollographql.apollo.GraphQLCall;
+import com.apollographql.apollo.api.Response;
+import com.apollographql.apollo.exception.ApolloException;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -36,9 +43,15 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.annotation.Nonnull;
+
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMyLocationClickListener {
 
     private GoogleMap mMap;
+    AWSAppSyncClient awsAppSyncClient;
+    GetSessionQuery.GetSession currentSession;
+
+
     LatLng startingPoint;
     Session gameSession;
     final static long REFRESHRATE = 3*1000;
@@ -66,8 +79,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        // asks users for permissions
         ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
+
+        // initalize connection with google location services
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
+        // establish connection to AWS
+        awsAppSyncClient = AWSAppSyncClient.builder()
+                .context(getApplicationContext())
+                .awsConfiguration(new AWSConfiguration(getApplicationContext()))
+                .build();
+
+        // get the session that user selected from mainactivity
+        String sessionId = getIntent().getStringExtra("sessionId");
+        queryForSelectedSession(sessionId);
 
         playerMarkers = new LinkedList<>();
         playerCircles = new LinkedList<>();
@@ -275,4 +301,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
     }
+
+    // query for the session associated with the sessionId that was passed from MainActivity
+    private void queryForSelectedSession(String sessionId) {
+        GetSessionQuery getSessionQuery =GetSessionQuery.builder().id(sessionId).build();
+        awsAppSyncClient.query(getSessionQuery)
+                .responseFetcher(AppSyncResponseFetchers.NETWORK_ONLY)
+                .enqueue(getSessionCallBack);
+    }
+
+    // Callback to get current game session
+    private GraphQLCall.Callback<GetSessionQuery.Data> getSessionCallBack = new GraphQLCall.Callback<GetSessionQuery.Data>() {
+        @Override
+        public void onResponse(@Nonnull Response<GetSessionQuery.Data> response) {
+            currentSession = response.data().getSession();
+        }
+
+        @Override
+        public void onFailure(@Nonnull ApolloException e) {
+            Log.e(TAG, "error from getSessionQuery: " + e.getMessage());
+        }
+    };
 }
