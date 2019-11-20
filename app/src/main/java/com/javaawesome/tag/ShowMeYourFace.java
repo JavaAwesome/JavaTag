@@ -90,6 +90,7 @@ public class ShowMeYourFace extends AppCompatActivity {
                 File file = new File(Environment.getExternalStorageDirectory() + "/" + System.currentTimeMillis() + ".png");
                 String msg = "file will be saved at " + file.getAbsolutePath();
                 Toast.makeText(getBaseContext(), msg,Toast.LENGTH_LONG).show();
+//
 //              Why what is it used for???????
                 Executor executor = runnable -> {
                 };
@@ -149,6 +150,7 @@ public class ShowMeYourFace extends AppCompatActivity {
 
     private void bindCamera() {
         CameraX.unbindAll();
+
         final TextureView textureView = findViewById(R.id.view_finder);
         Size screen = new Size(textureView.getWidth(), textureView.getHeight()); //size of the screen
 
