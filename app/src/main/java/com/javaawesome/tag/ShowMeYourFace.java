@@ -24,6 +24,8 @@ import android.view.TextureView;
 import android.view.View;
 import android.widget.Toast;
 
+import com.amazonaws.mobile.config.AWSConfiguration;
+import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.File;
@@ -36,6 +38,7 @@ public class ShowMeYourFace extends AppCompatActivity {
     private ImageCapture imageCapture;
     final CameraX.LensFacing camera = CameraX.LensFacing.FRONT;
     String profilePicPath = null;
+    AWSAppSyncClient mAWSAppSyncClient;
 
     public void goToPicturePreview(String  profilePicPath){
         Intent goToPicturePreview = new Intent(this, picturePreview.class);
@@ -46,6 +49,12 @@ public class ShowMeYourFace extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_me_your_face);
 
+        mAWSAppSyncClient = AWSAppSyncClient.builder()
+                .context(getApplicationContext())
+                .awsConfiguration(new AWSConfiguration(getApplicationContext()))
+                .build();
+
+//*************  Check If app has camera permissions ************************
         Log.i(TAG, "onCreate: Hello World");
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.CAMERA)
@@ -63,9 +72,11 @@ public class ShowMeYourFace extends AppCompatActivity {
                         1);
             }
         }else {
+
+//************************************ Setup Buttons **********************************************
             FloatingActionButton picSnap = findViewById(R.id.picSnap);
-//            FloatingActionButton switchCamera = findViewById(R.id.fab_switch_camera);
-//            FloatingActionButton fab_flash = findViewById(R.id.fab_flash);
+//          FloatingActionButton switchCamera = findViewById(R.id.fab_switch_camera);
+//          FloatingActionButton fab_flash = findViewById(R.id.fab_flash);
 
 // **********************************   Setup Camera   **********************************************
             bindCamera();
@@ -73,7 +84,7 @@ public class ShowMeYourFace extends AppCompatActivity {
 //***************************************   Shutter Button Action ****************************************
 
             picSnap.setOnClickListener(event -> {
-                File file = new File(Environment.getExternalStorageDirectory() + "/" + System.currentTimeMillis() + "hello.png");
+                File file = new File(Environment.getExternalStorageDirectory() + "/" + "profilePic.png");
 //
 //              Why what is it used for??????? I believe that this runs the camera take pic
                 Executor executor = Executors.newSingleThreadExecutor();
@@ -153,12 +164,6 @@ public class ShowMeYourFace extends AppCompatActivity {
 //            });
         }
     }
-
-    public void onResume() {
-        super.onResume();
-        profilePicPath = null;
-    }
-
 
 //    ******************************* Method that sets up camera and preview settings ***************************************
     private void bindCamera(){
