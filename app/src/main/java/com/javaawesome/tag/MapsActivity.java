@@ -17,7 +17,11 @@ import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.amazonaws.amplify.generated.graphql.CreatePlayerMutation;
+import com.amazonaws.amplify.generated.graphql.GetPlayerQuery;
 import com.amazonaws.amplify.generated.graphql.GetSessionQuery;
+import com.amazonaws.amplify.generated.graphql.UpdatePlayerMutation;
+import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.config.AWSConfiguration;
 import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient;
 import com.amazonaws.mobileconnectors.appsync.fetcher.AppSyncResponseFetchers;
@@ -46,6 +50,9 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
+import type.CreatePlayerInput;
+import type.UpdatePlayerInput;
+
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMyLocationClickListener {
 
     private GoogleMap mMap;
@@ -68,6 +75,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private final String TAG = "javatag";
     String playerID;
     Player player;
+    String sessionId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,7 +99,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .build();
 
         // get the session that user selected from mainactivity
-        String sessionId = getIntent().getStringExtra("sessionId");
+        sessionId = getIntent().getStringExtra("sessionId");
         Log.i(TAG, "Session ID for map is: " + sessionId);
         queryForSelectedSession(sessionId);
 
@@ -103,7 +111,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if (playerID == null) {
 //            createPlayer();
         } else {
-//            queryForPlayerObject();
+            queryForPlayerObject();
         }
 
         mLocationCallback = new LocationCallback() {
@@ -112,6 +120,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 if (locationResult == null) {
                     return;
                 }
+                if(playerID == null) {
+                    createPlayer();
+                }
+                sendUserLocationQuery(locationResult);
                 updateMarkerAndCircleForAllPlayers(players);
             }
         };
@@ -119,8 +131,26 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 //        mFusedLocationClient.requestLocationUpdates(getLocationRequest(), mLocationCallback, null);
     }
 
-    private void sendUserLocationQuery() {
+    private void sendUserLocationQuery(LocationResult locationResult) {
+        UpdatePlayerInput updatePlayerInput = UpdatePlayerInput.builder()
+                .id(playerID)
+                .playerSessionId(sessionId)
+                .lat(locationResult.getLastLocation().getLatitude())
+                .lon(locationResult.getLastLocation().getLongitude())
+                .isIt(player.isIt())
+                .build();
+        UpdatePlayerMutation updatePlayerMutation = UpdatePlayerMutation.builder().input(updatePlayerInput).build();
+        awsAppSyncClient.mutate(updatePlayerMutation).enqueue(new GraphQLCall.Callback<UpdatePlayerMutation.Data>() {
+            @Override
+            public void onResponse(@Nonnull Response<UpdatePlayerMutation.Data> response) {
+                Log.i(TAG, "update success");
+            }
 
+            @Override
+            public void onFailure(@Nonnull ApolloException e) {
+                Log.e(TAG, "update not successful");
+            }
+        });
     }
 
     @Override
@@ -143,6 +173,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * it inside the SupportMapFragment. This method will only be triggered once the user has
      * installed Google Play services and returned to the app.
      */
+
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -299,11 +331,64 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     // query for the session associated with the sessionId that was passed from MainActivity
     private void queryForSelectedSession(String sessionId) {
-        GetSessionQuery getSessionQuery =GetSessionQuery.builder().id(sessionId).build();
+        GetSessionQuery getSessionQuery = GetSessionQuery.builder().id(sessionId).build();
         awsAppSyncClient.query(getSessionQuery)
                 .responseFetcher(AppSyncResponseFetchers.NETWORK_ONLY)
                 .enqueue(getSessionCallBack);
     }
+
+    // Make a Player
+    private void createPlayer() {
+        CreatePlayerInput input = CreatePlayerInput.builder()
+                .playerSessionId(sessionId)
+                .lat(startingPoint.latitude)
+                .lon(startingPoint.longitude)
+                .username(AWSMobileClient.getInstance().getUsername())
+                .isIt(false)
+                .build();
+        CreatePlayerMutation createPlayerMutation = CreatePlayerMutation.builder().input(input).build();
+
+        awsAppSyncClient.mutate(createPlayerMutation).enqueue(new GraphQLCall.Callback<CreatePlayerMutation.Data>() {
+            @Override
+            public void onResponse(@Nonnull Response<CreatePlayerMutation.Data> response) {
+                Log.i(TAG, "made it to creating a new player");
+                playerID = response.data().createPlayer().id();
+                player = new Player();
+                player.setId(playerID);
+                player.setIt(false);
+                player.setUsername(AWSMobileClient.getInstance().getUsername());
+                List<LatLng> bananas = new LinkedList<>();
+                bananas.add(startingPoint);
+                player.setLocations(bananas);
+            }
+
+            @Override
+            public void onFailure(@Nonnull ApolloException e) {
+                Log.e(TAG, "couldn't make a new player");
+            }
+        });
+    }
+
+    // Query for Player
+    private void queryForPlayerObject() {
+        GetPlayerQuery query = GetPlayerQuery.builder().id(playerID).build();
+        awsAppSyncClient.query(query)
+                .responseFetcher(AppSyncResponseFetchers.NETWORK_ONLY)
+                .enqueue(new GraphQLCall.Callback<GetPlayerQuery.Data>() {
+                    @Override
+                    public void onResponse(@Nonnull Response<GetPlayerQuery.Data> response) {
+                        Log.i(TAG, "made it to making a query for player object");
+                        // make a player instance
+                        player = new Player(response.data().getPlayer());
+                    }
+
+                    @Override
+                    public void onFailure(@Nonnull ApolloException e) {
+                        Log.e(TAG, "failed to get query for player object");
+                    }
+                });
+    }
+
 
     // Callback to get current game session
     private GraphQLCall.Callback<GetSessionQuery.Data> getSessionCallBack = new GraphQLCall.Callback<GetSessionQuery.Data>() {
