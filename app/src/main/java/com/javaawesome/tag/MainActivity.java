@@ -98,6 +98,12 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         queryAllSessions();
     }
 
+
+    public void goToCameraClass(View view){
+        Intent goToCamera = new Intent(this, ShowMeYourFace.class);
+        this.startActivity(goToCamera);
+    }
+
     //
     public void goToMap(View view) {
         // TODO: check if player already exist in the database
