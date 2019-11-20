@@ -4,9 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import android.content.Intent;
-import android.icu.text.RelativeDateTimeFormatter;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
@@ -14,9 +12,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.EditText;
-
 import com.amazonaws.amplify.generated.graphql.CreatePlayerMutation;
 import com.amazonaws.amplify.generated.graphql.CreateSessionMutation;
 import com.amazonaws.amplify.generated.graphql.ListSessionsQuery;
@@ -34,15 +30,11 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnSuccessListener;
-
 import java.util.LinkedList;
 import java.util.List;
-
 import javax.annotation.Nonnull;
-
 import type.CreatePlayerInput;
 import type.CreateSessionInput;
-
 import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
@@ -120,8 +112,6 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
                 .title(sessionName.getText().toString())
                 .lat(currentUserLocation.latitude)
                 .lon(currentUserLocation.longitude)
-//                .lat(47.608013) // geocoder things :slightly_smiling_face:
-//                .lon(-122.335167)
                 .radius(500)
                 .build();
         CreateSessionMutation createSessionMutation = CreateSessionMutation.builder().input(input).build();
@@ -129,22 +119,23 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
             @Override
             public void onResponse(@Nonnull Response<CreateSessionMutation.Data> response) {
                 sessionId = response.data().createSession().id();
+
                 CreatePlayerInput playerInput = CreatePlayerInput.builder()
                         .playerSessionId(response.data().createSession().id())
                         .isIt(false)
                         .lat(currentUserLocation.latitude)
                         .lon(currentUserLocation.longitude)
-//                        .lat(47.608013)
-//                        .lon(-122.335167)
                         .username(AWSMobileClient.getInstance().getUsername())
                         .build();
                 CreatePlayerMutation createPlayerMutation = CreatePlayerMutation.builder().input(playerInput).build();
                 awsAppSyncClient.mutate(createPlayerMutation).enqueue((new GraphQLCall.Callback<CreatePlayerMutation.Data>() {
                     @Override
                     public void onResponse(@Nonnull Response<CreatePlayerMutation.Data> response) {
+                        String userID = response.data().createPlayer().id();
                         Log.i(TAG, "player mutation happened! ... inside of a session mutation");
                         Intent goToMapIntent = new Intent(MainActivity.this, MapsActivity.class);
                         goToMapIntent.putExtra("sessionId", sessionId);
+                        goToMapIntent.putExtra("userID", userID);
                         MainActivity.this.startActivity(goToMapIntent);
                     }
                     @Override
@@ -159,6 +150,13 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         });
 
     }
+
+    //////// TEST BUTTON /////
+    public void onTestyClick(View view) {
+        startActivity(new Intent(MainActivity.this, NotificationActivity.class));
+    }
+
+    /////////////
 
     // Direct users to sign in page
     private void signInUser() {
@@ -190,6 +188,34 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         Intent goToMapIntent = new Intent(this, MapsActivity.class);
         goToMapIntent.putExtra("sessionId", session.id());
         this.startActivity(goToMapIntent);
+    }
+
+    @Override
+    public void addPlayerToChosenGame(final ListSessionsQuery.Item session) {
+//        Query
+        CreatePlayerInput playerInput = CreatePlayerInput.builder()
+                .playerSessionId(session.id())
+                .isIt(false)
+                .lat(currentUserLocation.latitude)
+                .lon(currentUserLocation.longitude)
+                .username(AWSMobileClient.getInstance().getUsername())
+                .build();
+        CreatePlayerMutation createPlayerMutation = CreatePlayerMutation.builder().input(playerInput).build();
+        awsAppSyncClient.mutate(createPlayerMutation).enqueue((new GraphQLCall.Callback<CreatePlayerMutation.Data>() {
+            @Override
+            public void onResponse(@Nonnull Response<CreatePlayerMutation.Data> response) {
+                String userID = response.data().createPlayer().id();
+                Log.i(TAG, "player mutation happened! ... inside of a session mutation");
+                Intent goToMapIntent = new Intent(MainActivity.this, MapsActivity.class);
+                goToMapIntent.putExtra("sessionId", session.id());
+                goToMapIntent.putExtra("userID", userID);
+                Log.i("veach", session.id() + "\n" +userID);
+            }
+            @Override
+            public void onFailure(@Nonnull ApolloException e) {
+                Log.i(TAG, "mutation of player failed, boohoo!");
+            }
+        }));
     }
 
     // get all sessions
@@ -240,4 +266,6 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
             }
         });
     }
+
+    // TODO: Build onDestroy that deletes user data from DB
 }

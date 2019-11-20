@@ -1,11 +1,15 @@
 package com.javaawesome.tag;
 
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.amazonaws.amplify.generated.graphql.ListSessionsQuery;
@@ -24,17 +28,29 @@ public class SessionAdapter extends RecyclerView.Adapter<SessionAdapter.SessionV
 
     @NonNull
     @Override
-    public SessionAdapter.SessionViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_recycler_view_sessions, parent, false);
+    public SessionAdapter.SessionViewHolder onCreateViewHolder(@NonNull final ViewGroup parent, int viewType) {
+        final View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_recycler_view_sessions, parent, false);
         final SessionViewHolder holder = new SessionViewHolder(v);
         v.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                listener.joinExistingGameSession(holder.session);
+                new AlertDialog.Builder(parent.getContext())
+                    .setTitle("Join game?")
+                    .setMessage("Would you like to join this game?")
+                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            listener.addPlayerToChosenGame(holder.session);
+                            listener.joinExistingGameSession(holder.session);
+                            //TODO:  Save the users ID to the database based on the session that they clicked
+                        }
+                    })
+                    .setNegativeButton("No", null).show();
             }
         });
         return holder;
-    }
+    };
+
 
     public static class SessionViewHolder extends RecyclerView.ViewHolder {
 
@@ -63,5 +79,6 @@ public class SessionAdapter extends RecyclerView.Adapter<SessionAdapter.SessionV
 
     public static interface OnSessionInteractionListener {
         public void joinExistingGameSession(ListSessionsQuery.Item session);
+        public void addPlayerToChosenGame(ListSessionsQuery.Item session);
     }
 }

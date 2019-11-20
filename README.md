@@ -47,8 +47,41 @@ No contribution guidelines at this point.
 
 ### Daily Team Workflow
 #### Day 1
+* Implemented the Google Maps object
+    * TAG possibility of Distance implemented
+    * TAG possibility of tapping tag button partially implemented
+* Figured out how to pass data to Google Maps to render pins
+* Setup DynamoDB
+    * Player model
+    * Session model
+* Created activities
+    * Map
+    * Main
+* Setup Cognito
+* Created recyclerview to pull current sessions
+* Created dummy team and session, loaded it to the database
+* Started logic to utilize tagging by pictures
+* Started logic to update which user is tagged  
 
 #### Day 2
+* Added permissions 
+* Fixed recycler view :D
+* Creating a session and passing in the users lat/lon to create the boundary
+* Querying the database for sessions
+* Modified initializeMarkerAndPlayers to allow its self to override
+    * Sets the markers and colors based on players
+    * Now called from callback from querying the database
+* Created a query for a selected session
+    * Creates an instance based on that ID
+    * Creates the starting point based on the users lat/lon
+    * Converting players from database back into players
+        * Created overloaded constructor in Player to allow this
+* Completed logic to render players to map
+    * Still need to add refresh logic to the render
+    * Validated if a user is already in a session or not
+* Started fun logic when player is tagged to show some sort of notification
+    * Figured out Vibrator!
+* Allowed players to join existing sessions  
 
 #### Day 3
 
