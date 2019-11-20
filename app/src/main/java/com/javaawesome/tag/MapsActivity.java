@@ -48,8 +48,6 @@ import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
@@ -80,7 +78,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     String playerID;
     Player player;
     String sessionId;
-    ScheduledExecutorService executorService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -135,6 +132,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onLocationResult(LocationResult locationResult) {
                 Log.i(TAG, "Location call back results " + locationResult.toString());
                 if (locationResult == null) {
+                    Log.i(TAG, "location result is null");
                     return;
                 }
 
@@ -142,7 +140,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 updateMarkerAndCircleForAllPlayers(players);
             }
         };
-
     }
 
     private void sendUserLocationQuery(LocationResult locationResult) {
@@ -177,6 +174,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onResume() {
         super.onResume();
+        startLocationUpdates();
     }
 
     /**
@@ -195,6 +193,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Log.i(TAG, "map is ready");
         mMap = googleMap;
 
+        mMap.setMyLocationEnabled(true);
         mMap.setOnMyLocationButtonClickListener(this);
         mMap.setOnMyLocationClickListener(this);
 
@@ -322,14 +321,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         if (distanceBetweenPlayers < tagDistance) {
             player.setIt(true);
-            itPlayer.setIt(false);
-            itPlayer = player;
             return true;
         } else {
             return false;
         }
     }
-
 
     private boolean checkForTag(Player player) {
         Log.i(TAG, "Made it into checkForTag");
@@ -415,7 +411,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     }
                 });
     }
-
 
     // Callback to get current game session
     private GraphQLCall.Callback<GetSessionQuery.Data> getSessionCallBack = new GraphQLCall.Callback<GetSessionQuery.Data>() {
