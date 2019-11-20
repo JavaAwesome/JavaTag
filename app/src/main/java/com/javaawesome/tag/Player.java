@@ -18,9 +18,9 @@ public class Player {
     private Marker marker;
     private Circle circle;
 
-    public Player(String username, Session gameSession) {
+    public Player(String username) {
         this.username = username;
-        this.gameSession = gameSession;
+        this.gameSession = null;
         this.isIt = false;
         this.locations = new LinkedList<>();
     }
@@ -57,6 +57,8 @@ public class Player {
     public Session getGameSession() {
         return gameSession;
     }
+
+    public boolean getIt(){return isIt;}
 
     public boolean isIt() {
         return isIt;
