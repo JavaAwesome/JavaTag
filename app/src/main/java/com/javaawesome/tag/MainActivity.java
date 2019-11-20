@@ -333,6 +333,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
                 .setCancelable(false)
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     public void onClick(final DialogInterface dialog, final int id) {
+                        dialog.dismiss();
                         startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
                     }
                 })
