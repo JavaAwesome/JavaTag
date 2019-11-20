@@ -174,7 +174,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onResume() {
         super.onResume();
-        startLocationUpdates();
+//        startLocationUpdates();
     }
 
     /**
