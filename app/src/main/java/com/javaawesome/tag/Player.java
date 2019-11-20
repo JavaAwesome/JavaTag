@@ -1,5 +1,8 @@
 package com.javaawesome.tag;
 
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
+
 import com.amazonaws.amplify.generated.graphql.GetPlayerQuery;
 import com.amazonaws.amplify.generated.graphql.GetSessionQuery;
 import com.google.android.gms.maps.model.Circle;
@@ -18,9 +21,9 @@ public class Player {
     private Marker marker;
     private Circle circle;
 
-    public Player(String username, Session gameSession) {
+    public Player(String username) {
         this.username = username;
-        this.gameSession = gameSession;
+        this.gameSession = null;
         this.isIt = false;
         this.locations = new LinkedList<>();
     }

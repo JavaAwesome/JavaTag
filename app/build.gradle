@@ -52,4 +52,9 @@ dependencies {
     //s3
     implementation 'com.amazonaws:aws-android-sdk-s3:2.15.+'
 
+    //Room Database
+    def room_version = "2.2.1"
+    implementation "androidx.room:room-runtime:$room_version"
+    annotationProcessor "androidx.room:room-compiler:$room_version"
+
 }

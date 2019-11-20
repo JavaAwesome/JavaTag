@@ -4,12 +4,17 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.room.Room;
+
+import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -48,6 +53,9 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
     FusedLocationProviderClient fusedLocationClient;
     String sessionId;
     LatLng currentUserLocation;
+    AppDatabase db;
+    PlayerLocal currentPlayer;
+    LocationManager locationManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +63,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         setContentView(R.layout.activity_main);
 
         ActivityCompat.requestPermissions(this, new String[]{ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION}, 10);
+        checkGpsStatus();
 
         // initialize aws mobile client and check if you are logged in or not
         AWSMobileClient.getInstance().initialize(getApplicationContext(), new Callback<UserStateDetails>() {
@@ -89,6 +98,9 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         recyclerNearbySessions.setLayoutManager(new LinearLayoutManager(this));
         this.sessionAdapter = new SessionAdapter(this.sessions, this);
         recyclerNearbySessions.setAdapter(this.sessionAdapter);
+
+        db = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "tag").build();
+        checkIfPlayerAlreadyExistInLocalDatabase();
     }
 
     @Override
@@ -98,7 +110,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         queryAllSessions();
     }
 
-    //
+    // Create new game session and go to map page
     public void goToMap(View view) {
         // TODO: check if player already exist in the database
         EditText sessionName = findViewById(R.id.editText_session_name);
@@ -113,33 +125,14 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
             @Override
             public void onResponse(@Nonnull Response<CreateSessionMutation.Data> response) {
                 sessionId = response.data().createSession().id();
-
-                CreatePlayerInput playerInput = CreatePlayerInput.builder()
-                        .playerSessionId(response.data().createSession().id())
-                        .isIt(false)
-                        .lat(currentUserLocation.latitude)
-                        .lon(currentUserLocation.longitude)
-                        .username(AWSMobileClient.getInstance().getUsername())
-                        .build();
-                CreatePlayerMutation createPlayerMutation = CreatePlayerMutation.builder().input(playerInput).build();
-                awsAppSyncClient.mutate(createPlayerMutation).enqueue((new GraphQLCall.Callback<CreatePlayerMutation.Data>() {
-                    @Override
-                    public void onResponse(@Nonnull Response<CreatePlayerMutation.Data> response) {
-                        String userID = response.data().createPlayer().id();
-                        Log.i(TAG, "player mutation happened! ... inside of a session mutation");
-                        Intent goToMapIntent = new Intent(MainActivity.this, MapsActivity.class);
-                        goToMapIntent.putExtra("sessionId", sessionId);
-                        goToMapIntent.putExtra("userID", userID);
-                        MainActivity.this.startActivity(goToMapIntent);
-                    }
-                    @Override
-                    public void onFailure(@Nonnull ApolloException e) {
-                        Log.i(TAG, "mutation of player failed, boohoo!");
-                    }
-                }));
+                Intent goToMapIntent = new Intent(MainActivity.this, MapsActivity.class);
+                goToMapIntent.putExtra("sessionId", sessionId);
+                goToMapIntent.putExtra("userID", currentPlayer.getId());
+                MainActivity.this.startActivity(goToMapIntent);
             }
             @Override
             public void onFailure(@Nonnull ApolloException e) {
+                Log.e(TAG, "error in creating new game session" + e.getMessage());
             }
         });
 
@@ -181,36 +174,37 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
     public void joinExistingGameSession(ListSessionsQuery.Item session) {
         Intent goToMapIntent = new Intent(this, MapsActivity.class);
         goToMapIntent.putExtra("sessionId", session.id());
+        goToMapIntent.putExtra("userId", currentPlayer.getId());
         this.startActivity(goToMapIntent);
     }
 
-    @Override
-    public void addPlayerToChosenGame(final ListSessionsQuery.Item session) {
-//        Query
-        CreatePlayerInput playerInput = CreatePlayerInput.builder()
-                .playerSessionId(session.id())
-                .isIt(false)
-                .lat(currentUserLocation.latitude)
-                .lon(currentUserLocation.longitude)
-                .username(AWSMobileClient.getInstance().getUsername())
-                .build();
-        CreatePlayerMutation createPlayerMutation = CreatePlayerMutation.builder().input(playerInput).build();
-        awsAppSyncClient.mutate(createPlayerMutation).enqueue((new GraphQLCall.Callback<CreatePlayerMutation.Data>() {
-            @Override
-            public void onResponse(@Nonnull Response<CreatePlayerMutation.Data> response) {
-                String userID = response.data().createPlayer().id();
-                Log.i(TAG, "player mutation happened! ... inside of a session mutation");
-                Intent goToMapIntent = new Intent(MainActivity.this, MapsActivity.class);
-                goToMapIntent.putExtra("sessionId", session.id());
-                goToMapIntent.putExtra("userID", userID);
-                Log.i("veach", session.id() + "\n" +userID);
-            }
-            @Override
-            public void onFailure(@Nonnull ApolloException e) {
-                Log.i(TAG, "mutation of player failed, boohoo!");
-            }
-        }));
-    }
+//    @Override
+//    public void addPlayerToChosenGame(final ListSessionsQuery.Item session) {
+////        Query
+//        CreatePlayerInput playerInput = CreatePlayerInput.builder()
+//                .playerSessionId(session.id())
+//                .isIt(false)
+//                .lat(currentUserLocation.latitude)
+//                .lon(currentUserLocation.longitude)
+//                .username(AWSMobileClient.getInstance().getUsername())
+//                .build();
+//        CreatePlayerMutation createPlayerMutation = CreatePlayerMutation.builder().input(playerInput).build();
+//        awsAppSyncClient.mutate(createPlayerMutation).enqueue((new GraphQLCall.Callback<CreatePlayerMutation.Data>() {
+//            @Override
+//            public void onResponse(@Nonnull Response<CreatePlayerMutation.Data> response) {
+//                String userID = response.data().createPlayer().id();
+//                Log.i(TAG, "player mutation happened! ... inside of a session mutation");
+//                Intent goToMapIntent = new Intent(MainActivity.this, MapsActivity.class);
+//                goToMapIntent.putExtra("sessionId", session.id());
+//                goToMapIntent.putExtra("userID", userID);
+//                Log.i("veach", session.id() + "\n" +userID);
+//            }
+//            @Override
+//            public void onFailure(@Nonnull ApolloException e) {
+//                Log.i(TAG, "mutation of player failed, boohoo!");
+//            }
+//        }));
+//    }
 
     // get all sessions
     private void queryAllSessions() {
@@ -262,4 +256,50 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
     }
 
     // TODO: Build onDestroy that deletes user data from DB
+
+
+    private void checkIfPlayerAlreadyExistInLocalDatabase() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                currentPlayer = db.playerDao().getPlayerByUsername(AWSMobileClient.getInstance().getUsername());
+                if (currentPlayer == null) {
+                    createPlayer();
+                }
+            }
+        }).run();
+    }
+
+    // Make a Player
+    private void createPlayer() {
+        CreatePlayerInput input = CreatePlayerInput.builder()
+                .lat(currentUserLocation.latitude)
+                .lon(currentUserLocation.longitude)
+                .username(AWSMobileClient.getInstance().getUsername())
+                .isIt(false)
+                .build();
+        CreatePlayerMutation createPlayerMutation = CreatePlayerMutation.builder().input(input).build();
+        awsAppSyncClient.mutate(createPlayerMutation).enqueue(new GraphQLCall.Callback<CreatePlayerMutation.Data>() {
+            @Override
+            public void onResponse(@Nonnull Response<CreatePlayerMutation.Data> response) {
+                currentPlayer = new PlayerLocal(AWSMobileClient.getInstance().getUsername(),
+                        response.data().createPlayer().id());
+                db.playerDao().addPlayer(currentPlayer);
+            }
+
+            @Override
+            public void onFailure(@Nonnull ApolloException e) {
+                Log.e(TAG, "error in creating new player");
+            }
+        });
+    }
+
+    private void checkGpsStatus() {
+        locationManager = (LocationManager)getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+        boolean GpsStatus = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        if (GpsStatus) {
+            Intent turnOnGpsIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+            startActivity(turnOnGpsIntent);
+        }
+    }
 }
