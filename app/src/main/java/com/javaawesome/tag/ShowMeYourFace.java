@@ -37,13 +37,12 @@ import java.util.concurrent.Executor;
 public class ShowMeYourFace extends AppCompatActivity {
     private static final String TAG = "ahren:javatag";
     private ImageCapture imageCapture;
+    final CameraX.LensFacing[] camera = {CameraX.LensFacing.FRONT};
 
-    private void goToPicPreview(View view){
-        Intent goToPicturePreview = new Intent(this, picturePreview.class);
-        this.startActivity(goToPicturePreview);
-    }
-
-
+//    private void goToPicPreview(View view){
+//        Intent goToPicturePreview = new Intent(this, picturePreview.class);
+//        this.startActivity(goToPicturePreview);
+//    }
 
 
     @Override
@@ -51,11 +50,11 @@ public class ShowMeYourFace extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_me_your_face);
 
-
+        Log.i(TAG, "onCreate: Hello World");
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED){
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+            if(ActivityCompat.shouldShowRequestPermissionRationale(this,
                     Manifest.permission.CAMERA)) {
                 // Show an explanation to the user *asynchronously* -- don't block
                 // this thread waiting for the user's response! After the user
@@ -71,62 +70,12 @@ public class ShowMeYourFace extends AppCompatActivity {
             FloatingActionButton switchCamera = findViewById(R.id.fab_switch_camera);
             FloatingActionButton fab_flash = findViewById(R.id.fab_flash);
 
-            CameraX.unbindAll();
-            CameraX.LensFacing camera = CameraX.LensFacing.BACK;
+            bindCamera();
 
-            final TextureView textureView = findViewById(R.id.view_finder);
-//            Some adaptions from  https://github.com/journaldev/journaldev/blob/master/Android/AndroidCameraX/app/src/main/java/com/journaldev/androidcamerax/MainActivity.java
-
-            Size screen = new Size(textureView.getWidth(), textureView.getHeight());
-
-            PreviewConfig config = new PreviewConfig.Builder()
-                    .setTargetResolution(screen)
-                    .setLensFacing(camera)
-//                    Allow the camera to rotate???
-                    .setTargetRotation(getWindowManager().getDefaultDisplay().getRotation())
-                    .build();
-
-            Preview preview = new Preview(config);
-//      Set the display view for the camera preview
-
-            preview.setOnPreviewOutputUpdateListener(new Preview.OnPreviewOutputUpdateListener() {
-                @Override
-                public void onUpdated(Preview.PreviewOutput previewOutput) {
-                    // Your code here. For example, use
-                    textureView.setSurfaceTexture(previewOutput.getSurfaceTexture());
-                    // and post to a GL renderer.
-                }
-            });
-            CameraX.bindToLifecycle(this, preview);
-
-
-            ImageCaptureConfig config2 =
-                    new ImageCaptureConfig.Builder()
-                            .setTargetRotation(getWindowManager().getDefaultDisplay().getRotation())
-                            .build();
-
-            imageCapture = new ImageCapture(config2);
-
-//      Causes camera u=instance to only exist on this activity is started and destroyed on start and finish
-            CameraX.bindToLifecycle(this, imageCapture, preview);
-
-
-//*****************************     Turn Off / On Flash***********************************************
-//      Adapted from Kotlin code at https://gabrieltanner.org/blog/android-camerax
-            fab_flash.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    FlashMode flashMode = imageCapture.getFlashMode();
-                    if (flashMode == FlashMode.ON) {
-                        imageCapture.setFlashMode(FlashMode.OFF);
-                    } else {
-                        imageCapture.setFlashMode(FlashMode.ON);
-                    }
-                }
-            });
 
 
 //***************************************   Shutter Button Action ****************************************
+
             picSnap.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View event) {
@@ -153,7 +102,75 @@ public class ShowMeYourFace extends AppCompatActivity {
             });
 
 
-// **************** Checks to see if flash is present on the current camera and *********************
+//*************************Setting up the image capture config*************************
+
+
+
+
+//*****************************     Turn Off / On Flash***********************************************
+//      Adapted from Kotlin code at https://gabrieltanner.org/blog/android-camerax
+            fab_flash.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    FlashMode flashMode = imageCapture.getFlashMode();
+                    if (flashMode == FlashMode.ON) {
+                        imageCapture.setFlashMode(FlashMode.OFF);
+                    } else {
+                        imageCapture.setFlashMode(FlashMode.ON);
+                    }
+                }
+            });
+
+// ******************* Changes the lens direction if the button is clicked ****************************
+            switchCamera.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    if (CameraX.LensFacing.FRONT == camera[0]) {
+                        camera[0] = CameraX.LensFacing.BACK;
+                    } else {
+                       camera[0] = CameraX.LensFacing.FRONT;
+                    }
+                    bindCamera();
+                }
+            });
+        }
+    }
+
+    private void bindCamera() {
+        CameraX.unbindAll();
+        final TextureView textureView = findViewById(R.id.view_finder);
+
+
+        PreviewConfig config = new PreviewConfig.Builder()
+                .setLensFacing(camera[0])
+                .build();
+        Preview preview = new Preview(config);
+
+//      Set the display view for the camera preview
+        preview.setOnPreviewOutputUpdateListener(new Preview.OnPreviewOutputUpdateListener() {
+            @Override
+            public void onUpdated(Preview.PreviewOutput previewOutput) {
+                // Your code here. For example, use
+                textureView.setSurfaceTexture(previewOutput.getSurfaceTexture());
+            }
+
+        });
+
+        ImageCaptureConfig config2 =
+                new ImageCaptureConfig.Builder()
+                        .setTargetRotation(getWindowManager().getDefaultDisplay().getRotation())
+                        .setLensFacing(camera[0])
+                        .setFlashMode(FlashMode.ON)
+                        .build();
+
+        imageCapture = new ImageCapture(config2);
+
+//      Causes camera u=instance to only exist on this activity is started and destroyed on start and finish
+        CameraX.bindToLifecycle(this, imageCapture, preview);
+    }
+
+}
+//// **************** Checks to see if flash is present on the current camera and *********************
 //            try {
 //                CameraInfo cameraInfo = CameraX.getCameraInfo(camera);
 //                LiveData<Boolean> isFlashAvailable = cameraInfo.isFlashAvailable();
@@ -162,8 +179,3 @@ public class ShowMeYourFace extends AppCompatActivity {
 //                Log.w(TAG, "Cannot get flash available information", e);
 //                fab_flash.setVisibility(View.VISIBLE);
 //            }
-        }
-    }
-
-
-}
