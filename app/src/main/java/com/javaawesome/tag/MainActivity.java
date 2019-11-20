@@ -1,12 +1,13 @@
 package com.javaawesome.tag;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.room.Room;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.Location;
 import android.location.LocationManager;
@@ -20,6 +21,7 @@ import android.view.View;
 import android.widget.EditText;
 import com.amazonaws.amplify.generated.graphql.CreatePlayerMutation;
 import com.amazonaws.amplify.generated.graphql.CreateSessionMutation;
+import com.amazonaws.amplify.generated.graphql.ListPlayersQuery;
 import com.amazonaws.amplify.generated.graphql.ListSessionsQuery;
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.client.Callback;
@@ -52,10 +54,10 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
     AWSAppSyncClient awsAppSyncClient;
     FusedLocationProviderClient fusedLocationClient;
     String sessionId;
+    String playerId;
     LatLng currentUserLocation;
-    AppDatabase db;
-    PlayerLocal currentPlayer;
     LocationManager locationManager;
+    AlertDialog alert;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,7 +65,6 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         setContentView(R.layout.activity_main);
 
         ActivityCompat.requestPermissions(this, new String[]{ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION}, 10);
-        checkGpsStatus();
 
         // initialize aws mobile client and check if you are logged in or not
         AWSMobileClient.getInstance().initialize(getApplicationContext(), new Callback<UserStateDetails>() {
@@ -98,15 +99,18 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         recyclerNearbySessions.setLayoutManager(new LinearLayoutManager(this));
         this.sessionAdapter = new SessionAdapter(this.sessions, this);
         recyclerNearbySessions.setAdapter(this.sessionAdapter);
-
-        db = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "tag").build();
-        checkIfPlayerAlreadyExistInLocalDatabase();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        getCurrentUserLocation();
+
+        if (checkGpsStatus()) {
+//            getCurrentUserLocation();
+            checkIfPlayerAlreadyExistInLocalDatabase();
+        } else {
+            buildAlertMessageNoGps();
+        }
         queryAllSessions();
     }
 
@@ -127,7 +131,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
                 sessionId = response.data().createSession().id();
                 Intent goToMapIntent = new Intent(MainActivity.this, MapsActivity.class);
                 goToMapIntent.putExtra("sessionId", sessionId);
-                goToMapIntent.putExtra("userID", currentPlayer.getId());
+                goToMapIntent.putExtra("userID", playerId);
                 MainActivity.this.startActivity(goToMapIntent);
             }
             @Override
@@ -141,6 +145,12 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
     //////// TEST BUTTON /////
     public void onTestyClick(View view) {
         startActivity(new Intent(MainActivity.this, NotificationActivity.class));
+    }
+
+    ///////////// Turn on Camera ///////////////////
+    public void goToCameraClass(View view){
+        Intent goToCamera = new Intent(this, ShowMeYourFace.class);
+        this.startActivity(goToCamera);
     }
 
     /////////////
@@ -174,7 +184,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
     public void joinExistingGameSession(ListSessionsQuery.Item session) {
         Intent goToMapIntent = new Intent(this, MapsActivity.class);
         goToMapIntent.putExtra("sessionId", session.id());
-        goToMapIntent.putExtra("userId", currentPlayer.getId());
+        goToMapIntent.putExtra("userId", playerId);
         this.startActivity(goToMapIntent);
     }
 
@@ -247,9 +257,12 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
                         @Override
                         public void run() {
                             currentUserLocation = new LatLng(location.getLatitude(), location.getLongitude());
+                            Log.i(TAG, "playerId in getcurrentUserlocation " + playerId);
+                            if (playerId == null) {
+                                createPlayer();
+                            }
                         }
                     }).run();
-
                 }
             }
         });
@@ -259,15 +272,32 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
 
 
     private void checkIfPlayerAlreadyExistInLocalDatabase() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                currentPlayer = db.playerDao().getPlayerByUsername(AWSMobileClient.getInstance().getUsername());
-                if (currentPlayer == null) {
-                    createPlayer();
-                }
-            }
-        }).run();
+        Log.i(TAG, "got in checkIfPLayerExist method");
+        awsAppSyncClient.query(ListPlayersQuery.builder().build())
+                .responseFetcher(AppSyncResponseFetchers.NETWORK_ONLY)
+                .enqueue(new GraphQLCall.Callback<ListPlayersQuery.Data>() {
+                    @Override
+                    public void onResponse(@Nonnull Response<ListPlayersQuery.Data> response) {
+                        Log.i(TAG, response.data().listPlayers().items().toString());
+                        Log.i(TAG, "this is playerID " + playerId);
+                        String playerName = AWSMobileClient.getInstance().getUsername();
+                        List<ListPlayersQuery.Item> players = response.data().listPlayers().items();
+                        for(ListPlayersQuery.Item player : players){
+                            if(playerName.equals(player.username())){
+                                Log.i(TAG, "Username match " + playerName + " " + player.id());
+                                playerId = player.id();
+                                getCurrentUserLocation();
+                                return;
+                            }
+                        }
+                        getCurrentUserLocation();
+                    }
+
+                    @Override
+                    public void onFailure(@Nonnull ApolloException e) {
+                        Log.e(TAG, "error in checking if a player already exists in database");
+                    }
+                });
     }
 
     // Make a Player
@@ -282,9 +312,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         awsAppSyncClient.mutate(createPlayerMutation).enqueue(new GraphQLCall.Callback<CreatePlayerMutation.Data>() {
             @Override
             public void onResponse(@Nonnull Response<CreatePlayerMutation.Data> response) {
-                currentPlayer = new PlayerLocal(AWSMobileClient.getInstance().getUsername(),
-                        response.data().createPlayer().id());
-                db.playerDao().addPlayer(currentPlayer);
+                playerId = response.data().createPlayer().id();
             }
 
             @Override
@@ -294,12 +322,26 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         });
     }
 
-    private void checkGpsStatus() {
+    private boolean checkGpsStatus() {
         locationManager = (LocationManager)getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
-        boolean GpsStatus = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        if (GpsStatus) {
-            Intent turnOnGpsIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-            startActivity(turnOnGpsIntent);
-        }
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+    }
+
+    private void buildAlertMessageNoGps() {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Your GPS is disabled, do you want to enable it?")
+                .setCancelable(false)
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    public void onClick(final DialogInterface dialog, final int id) {
+                        startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                    }
+                })
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    public void onClick(final DialogInterface dialog, final int id) {
+                        dialog.cancel();
+                    }
+                });
+        alert = builder.create();
+        alert.show();
     }
 }

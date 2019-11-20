@@ -58,7 +58,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     AWSAppSyncClient awsAppSyncClient;
     GetSessionQuery.GetSession currentSession;
-    AppDatabase db;
 
     LatLng startingPoint;
     final static long REFRESHRATE = 3*1000;

@@ -1,8 +1,5 @@
 package com.javaawesome.tag;
 
-import androidx.room.Entity;
-import androidx.room.PrimaryKey;
-
 import com.amazonaws.amplify.generated.graphql.GetPlayerQuery;
 import com.amazonaws.amplify.generated.graphql.GetSessionQuery;
 import com.google.android.gms.maps.model.Circle;
