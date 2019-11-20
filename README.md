@@ -47,7 +47,21 @@ No contribution guidelines at this point.
 
 ### Daily Team Workflow
 #### Day 1
-
+* Implemented the Google Maps object
+    * TAG possibility of Distance implemented
+    * TAG possibility of tapping tag button partially implemented
+  * Figured out how to pass data to Google Maps to render pins
+  * Setup DynamoDB
+    * Player model
+    * Session model
+  * Created activities
+    * Map
+    * Main
+  * Setup Cognito
+  * Created recyclerview to pull current sessions
+  * Created dummy team and session, loaded it to the database
+  * Started logic to utilize tagging by pictures
+  * Started logic to update which user is tagged
 #### Day 2
 
 #### Day 3
