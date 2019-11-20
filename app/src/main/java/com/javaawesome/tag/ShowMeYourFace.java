@@ -28,15 +28,19 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.File;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 
 public class ShowMeYourFace extends AppCompatActivity {
     private static final String TAG = "ahren:javatag";
     private ImageCapture imageCapture;
     final CameraX.LensFacing camera = CameraX.LensFacing.FRONT;
+    String profilePicPath = null;
 
-
-
+    public void goToPicturePreview(String  profilePicPath){
+        Intent goToPicturePreview = new Intent(this, picturePreview.class);
+        this.startActivity(goToPicturePreview);
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,6 +52,7 @@ public class ShowMeYourFace extends AppCompatActivity {
                 != PackageManager.PERMISSION_GRANTED){
             if(ActivityCompat.shouldShowRequestPermissionRationale(this,
                     Manifest.permission.CAMERA)) {
+                Log.i(TAG, "onCreate: permission not granted");
                 // Show an explanation to the user *asynchronously* -- don't block
                 // this thread waiting for the user's response! After the user
                 // sees the explanation, try again to request the permission.
@@ -62,11 +67,35 @@ public class ShowMeYourFace extends AppCompatActivity {
 //            FloatingActionButton switchCamera = findViewById(R.id.fab_switch_camera);
 //            FloatingActionButton fab_flash = findViewById(R.id.fab_flash);
 
+// **********************************   Setup Camera   **********************************************
             bindCamera();
 
-
-
 //***************************************   Shutter Button Action ****************************************
+
+            picSnap.setOnClickListener(event -> {
+                File file = new File(Environment.getExternalStorageDirectory() + "/" + System.currentTimeMillis() + "hello.png");
+//
+//              Why what is it used for??????? I believe that this runs the camera take pic
+                Executor executor = Executors.newSingleThreadExecutor();
+                Log.i(TAG, "onCreate: taking picture?");
+                imageCapture.takePicture(file, executor, new ImageCapture.OnImageSavedListener() {
+                    @Override
+                    public void onError(
+                            @NonNull ImageCapture.ImageCaptureError imageCaptureError, @NonNull String message, Throwable cause) {
+//                                       TODO: insert your code here.
+                    }
+
+                    @Override
+                    public void onImageSaved(@NonNull File file) {
+                        Log.v(TAG, "onImageSaved: Saved");
+                        profilePicPath = file.getAbsolutePath();
+                        String msg = "file saved at " + file.getAbsolutePath();
+                        Log.i(TAG, "onImageSaved: "+msg);
+                        goToPicturePreview(file.getAbsolutePath());
+                    }
+                });
+
+            });
 
 
 //                @Override
@@ -84,36 +113,13 @@ public class ShowMeYourFace extends AppCompatActivity {
 //                        }
 //                    });
 //                }
-
-            picSnap.setOnClickListener(event -> {
-                Log.i(TAG, "onCreate: taking picture?");
-                File file = new File(Environment.getExternalStorageDirectory() + "/" + System.currentTimeMillis() + ".png");
-                String msg = "file will be saved at " + file.getAbsolutePath();
-                Toast.makeText(getBaseContext(), msg,Toast.LENGTH_LONG).show();
-//
-//              Why what is it used for???????
-                Executor executor = runnable -> {
-                };
-
-                imageCapture.takePicture(file, executor,
-                        new ImageCapture.OnImageSavedListener() {
-                            @Override
-                            public void onImageSaved(@NonNull File file) {
-                                Log.i(TAG, "onImageSaved: INside Image Saved");
-                                String msg = "Pic captured at " + file.getAbsolutePath();
-                                Toast.makeText(getBaseContext(), msg,Toast.LENGTH_LONG).show();
-                            }
-
-                            @Override
-                            public void onError(
-                                    ImageCapture.ImageCaptureError imageCaptureError, String message, Throwable cause) {
-//                                       TODO: insert your code here.
-                            }
-                        });
-            });
+//            ImageCaptureConfig imageCaptureConfig = new ImageCaptureConfig.Builder().setCaptureMode(ImageCapture.CaptureMode.MIN_LATENCY)
+//                    .setTargetRotation(getWindowManager().getDefaultDisplay().getRotation()).build();
+//            final ImageCapture imgCap = new ImageCapture(imageCaptureConfig);
 
 
-//*************************Setting up the image capture config*************************
+
+
 
 
 
@@ -148,7 +154,14 @@ public class ShowMeYourFace extends AppCompatActivity {
         }
     }
 
-    private void bindCamera() {
+    public void onResume() {
+        super.onResume();
+        profilePicPath = null;
+    }
+
+
+//    ******************************* Method that sets up camera and preview settings ***************************************
+    private void bindCamera(){
         CameraX.unbindAll();
 
         final TextureView textureView = findViewById(R.id.view_finder);
@@ -165,7 +178,7 @@ public class ShowMeYourFace extends AppCompatActivity {
 //      Set the display view for the camera preview
         preview.setOnPreviewOutputUpdateListener(new Preview.OnPreviewOutputUpdateListener() {
             @Override
-            public void onUpdated(Preview.PreviewOutput previewOutput) {
+            public void onUpdated(@NonNull Preview.PreviewOutput previewOutput) {
                 // Your code here. For example, use
                 textureView.setSurfaceTexture(previewOutput.getSurfaceTexture());
             }

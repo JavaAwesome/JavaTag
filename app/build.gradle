@@ -56,6 +56,9 @@ dependencies {
 
     //s3
     implementation 'com.amazonaws:aws-android-sdk-s3:2.15.+'
+    implementation ('com.amazonaws:aws-android-sdk-mobile-client:2.15.+@aar') { transitive = true }
+    implementation ('com.amazonaws:aws-android-sdk-auth-userpools:2.15.+@aar') { transitive = true }
+
 
     // CameraX core library
     def camerax_version = "1.0.0-alpha05"
