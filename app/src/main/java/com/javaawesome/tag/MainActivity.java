@@ -184,6 +184,34 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         this.startActivity(goToMapIntent);
     }
 
+    @Override
+    public void addPlayerToChosenGame(final ListSessionsQuery.Item session) {
+//        Query
+        CreatePlayerInput playerInput = CreatePlayerInput.builder()
+                .playerSessionId(session.id())
+                .isIt(false)
+                .lat(currentUserLocation.latitude)
+                .lon(currentUserLocation.longitude)
+                .username(AWSMobileClient.getInstance().getUsername())
+                .build();
+        CreatePlayerMutation createPlayerMutation = CreatePlayerMutation.builder().input(playerInput).build();
+        awsAppSyncClient.mutate(createPlayerMutation).enqueue((new GraphQLCall.Callback<CreatePlayerMutation.Data>() {
+            @Override
+            public void onResponse(@Nonnull Response<CreatePlayerMutation.Data> response) {
+                String userID = response.data().createPlayer().id();
+                Log.i(TAG, "player mutation happened! ... inside of a session mutation");
+                Intent goToMapIntent = new Intent(MainActivity.this, MapsActivity.class);
+                goToMapIntent.putExtra("sessionId", session.id());
+                goToMapIntent.putExtra("userID", userID);
+                Log.i("veach", session.id() + "\n" +userID);
+            }
+            @Override
+            public void onFailure(@Nonnull ApolloException e) {
+                Log.i(TAG, "mutation of player failed, boohoo!");
+            }
+        }));
+    }
+
     // get all sessions
     private void queryAllSessions() {
         awsAppSyncClient.query(ListSessionsQuery.builder().build())

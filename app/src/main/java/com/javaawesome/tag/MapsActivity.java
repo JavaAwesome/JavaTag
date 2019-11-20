@@ -259,6 +259,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             player.getMarker().setPosition(player.getLastLocation());
             player.getCircle().setCenter(player.getLastLocation());
             if (checkForTag(player)) {
+                Log.i("veach", "In the updateMarkerAndCircleForAllPlayers");
                 playersJustGotTagged.add(player);
                 player.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(itHue));
                 player.getCircle().setStrokeColor(itColor);
@@ -314,10 +315,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     private boolean checkForTag(Player player) {
+        Log.i("veach", "Made it into checkForTag");
         if (player.isIt()) {
             return false;
         }
         for(Player itPlayer : itPlayers) {
+            Log.i("veach", itPlayer.toString());
             if (isTagged(player, itPlayer)) {
 //                Toast.makeText(this, "" + player.getUsername() + " is now it!!!", Toast.LENGTH_SHORT);
                 //TODO: If future views added to app, may need to change "this"?
