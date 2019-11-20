@@ -12,7 +12,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:onClick="goToMap"
-        android:text="Start New Game"
+        android:text="@string/start_new_game_button"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
@@ -27,7 +27,7 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
         android:onClick="signoutCurrentUser"
-        android:text="Sign Out"
+        android:text="@string/sign_out"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -36,8 +36,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:ems="10"
-        android:hint="Enter Game Session Name"
-        android:inputType="textPersonName"
+        android:hint="@string/naming_game"
+        android:inputType="textShortMessage"
         app:layout_constraintBottom_toTopOf="@+id/goToMapButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -60,11 +60,10 @@
         android:id="@+id/testButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:onClick="onTestyClick"
         android:text="TEST"
-        app:layout_constraintEnd_toStartOf="@+id/signoutButton"
-        app:layout_constraintHorizontal_bias="0.42"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
