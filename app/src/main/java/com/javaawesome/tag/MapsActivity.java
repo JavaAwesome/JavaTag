@@ -10,6 +10,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.location.Location;
+import android.nfc.Tag;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -20,10 +21,13 @@ import android.widget.Toast;
 import com.amazonaws.amplify.generated.graphql.CreatePlayerMutation;
 import com.amazonaws.amplify.generated.graphql.GetPlayerQuery;
 import com.amazonaws.amplify.generated.graphql.GetSessionQuery;
+import com.amazonaws.amplify.generated.graphql.OnCreatePlayerSubscription;
+import com.amazonaws.amplify.generated.graphql.OnUpdatePlayerSubscription;
 import com.amazonaws.amplify.generated.graphql.UpdatePlayerMutation;
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.config.AWSConfiguration;
 import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient;
+import com.amazonaws.mobileconnectors.appsync.AppSyncSubscriptionCall;
 import com.amazonaws.mobileconnectors.appsync.fetcher.AppSyncResponseFetchers;
 import com.apollographql.apollo.GraphQLCall;
 import com.apollographql.apollo.api.Response;
@@ -76,6 +80,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     String playerID;
     Player player;
     String sessionId;
+    private AppSyncSubscriptionCall<OnUpdatePlayerSubscription.Data> subscriptionWatcher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -125,12 +130,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
                 sendUserLocationQuery(locationResult);
                 updateMarkerAndCircleForAllPlayers(players);
+
             }
         };
 
 //        mFusedLocationClient.requestLocationUpdates(getLocationRequest(), mLocationCallback, null);
     }
 
+    // ===== Send user info to DynamoDB ====
     private void sendUserLocationQuery(LocationResult locationResult) {
         UpdatePlayerInput updatePlayerInput = UpdatePlayerInput.builder()
                 .id(playerID)
@@ -139,8 +146,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .lon(locationResult.getLastLocation().getLongitude())
                 .isIt(player.isIt())
                 .build();
-        UpdatePlayerMutation updatePlayerMutation = UpdatePlayerMutation.builder().input(updatePlayerInput).build();
-        awsAppSyncClient.mutate(updatePlayerMutation).enqueue(new GraphQLCall.Callback<UpdatePlayerMutation.Data>() {
+
+        UpdatePlayerMutation updatePlayerMutation = UpdatePlayerMutation.builder()
+                .input(updatePlayerInput).build();
+
+        awsAppSyncClient.mutate(updatePlayerMutation)
+                .enqueue(new GraphQLCall.Callback<UpdatePlayerMutation.Data>() {
             @Override
             public void onResponse(@Nonnull Response<UpdatePlayerMutation.Data> response) {
                 Log.i(TAG, "update success");
@@ -153,6 +164,35 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
+    // ===== Subscribe to Data real-time ======
+    // https://aws-amplify.github.io/docs/android/api
+
+    private void subscribe() {
+
+            OnUpdatePlayerSubscription subscription = OnUpdatePlayerSubscription.builder().build();
+            subscriptionWatcher = awsAppSyncClient.subscribe(subscription);
+            subscriptionWatcher.execute(subCallback);
+        }
+
+        private AppSyncSubscriptionCall.Callback<OnUpdatePlayerSubscription.Data> subCallback = new AppSyncSubscriptionCall.Callback<OnUpdatePlayerSubscription.Data>() {
+            @Override
+            public void onResponse(@Nonnull Response<OnUpdatePlayerSubscription.Data> response) {
+                Log.i(TAG, response.data().toString());
+            }
+
+            @Override
+            public void onFailure(@Nonnull ApolloException e) {
+                Log.e(TAG, e.toString());
+            }
+
+        @Override
+        public void onCompleted() {
+            Log.i(TAG, "Subscription completed ");
+        }
+    };
+
+    // =============
+
     @Override
     protected void onPause() {
         super.onPause();
@@ -162,6 +202,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onResume() {
         super.onResume();
+        subscribe();
     }
 
     /**
