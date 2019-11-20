@@ -58,6 +58,8 @@ public class Player {
         return gameSession;
     }
 
+    public boolean getIt(){return isIt;}
+
     public boolean isIt() {
         return isIt;
     }
