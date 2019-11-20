@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.core.CameraInfo;
 import androidx.camera.core.CameraInfoUnavailableException;
 import androidx.camera.core.CameraX;
+import androidx.camera.core.FlashMode;
 import androidx.camera.core.ImageCapture;
 import androidx.camera.core.ImageCaptureConfig;
 import androidx.camera.core.ImageProxy;
@@ -20,10 +21,14 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.util.Rational;
+import android.util.Size;
 import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.File;
 import java.util.concurrent.Executor;
@@ -37,6 +42,7 @@ public class ShowMeYourFace extends AppCompatActivity {
         Intent goToPicturePreview = new Intent(this, picturePreview.class);
         this.startActivity(goToPicturePreview);
     }
+
 
 
 
@@ -61,15 +67,27 @@ public class ShowMeYourFace extends AppCompatActivity {
                         1);
             }
         }else {
+            FloatingActionButton picSnap = findViewById(R.id.picSnap);
+            FloatingActionButton switchCamera = findViewById(R.id.fab_switch_camera);
+            FloatingActionButton fab_flash = findViewById(R.id.fab_flash);
 
-            PreviewConfig config = new PreviewConfig.Builder().setLensFacing(CameraX.LensFacing.FRONT)
+            CameraX.unbindAll();
+            CameraX.LensFacing camera = CameraX.LensFacing.BACK;
+
+            final TextureView textureView = findViewById(R.id.view_finder);
+//            Some adaptions from  https://github.com/journaldev/journaldev/blob/master/Android/AndroidCameraX/app/src/main/java/com/journaldev/androidcamerax/MainActivity.java
+
+            Size screen = new Size(textureView.getWidth(), textureView.getHeight());
+
+            PreviewConfig config = new PreviewConfig.Builder()
+                    .setTargetResolution(screen)
+                    .setLensFacing(camera)
 //                    Allow the camera to rotate???
                     .setTargetRotation(getWindowManager().getDefaultDisplay().getRotation())
                     .build();
 
             Preview preview = new Preview(config);
 //      Set the display view for the camera preview
-            final TextureView textureView = findViewById(R.id.view_finder);
 
             preview.setOnPreviewOutputUpdateListener(new Preview.OnPreviewOutputUpdateListener() {
                 @Override
@@ -79,69 +97,73 @@ public class ShowMeYourFace extends AppCompatActivity {
                     // and post to a GL renderer.
                 }
             });
-
-
             CameraX.bindToLifecycle(this, preview);
+
 
             ImageCaptureConfig config2 =
                     new ImageCaptureConfig.Builder()
                             .setTargetRotation(getWindowManager().getDefaultDisplay().getRotation())
                             .build();
 
-           imageCapture = new ImageCapture(config2);
+            imageCapture = new ImageCapture(config2);
 
 //      Causes camera u=instance to only exist on this activity is started and destroyed on start and finish
             CameraX.bindToLifecycle(this, imageCapture, preview);
 
-            Button picSnap = findViewById(R.id.picSnap);
+
+//*****************************     Turn Off / On Flash***********************************************
+//      Adapted from Kotlin code at https://gabrieltanner.org/blog/android-camerax
+            fab_flash.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    FlashMode flashMode = imageCapture.getFlashMode();
+                    if (flashMode == FlashMode.ON) {
+                        imageCapture.setFlashMode(FlashMode.OFF);
+                    } else {
+                        imageCapture.setFlashMode(FlashMode.ON);
+                    }
+                }
+            });
+
+
+//***************************************   Shutter Button Action ****************************************
             picSnap.setOnClickListener(new View.OnClickListener() {
-                   @Override
-                   public void onClick(View event) {
+                @Override
+                public void onClick(View event) {
 //                       File profilePic = new File("./");
+                    Executor executor = new Executor() {
+                        @Override
+                        public void execute(Runnable runnable) {
+                        }
+                    };
+                    imageCapture.takePicture(executor,
+                            new ImageCapture.OnImageCapturedListener() {
+                                public void onCaptureSuccess(ImageProxy image, int rotationDegrees) {
+                                    Log.i(TAG, "onCaptureSuccess: registered a camera click!");
+                                    image.getImage();
+                                }
 
-                       Executor executor = new Executor() {
-                           @Override
-                           public void execute(Runnable runnable) {
-
-                           }
-                       };
-
-                       imageCapture.takePicture(executor,
-                               new ImageCapture.OnImageCapturedListener() {
-
-                                    public void onCaptureSuccess(ImageProxy image, int rotationDegrees){
-                                        Log.i(TAG, "onCaptureSuccess: registered a camera click!");
-                                        image.getImage();
-                                       }
-
-
-                                   @Override
-                                   public void onError(
-                                           ImageCapture.ImageCaptureError imageCaptureError, String message, Throwable cause) {
-                                       // insert your code here.
-
-                                   }
-                               });
-                   }
-               });
+                                @Override
+                                public void onError(
+                                        ImageCapture.ImageCaptureError imageCaptureError, String message, Throwable cause) {
+//                                       TODO: insert your code here.
+                                }
+                            });
+                }
+            });
 
 
-
-
-
-//
-//        try {
-//            CameraInfo cameraInfo = CameraX.getCameraInfo(currentCameraLensFacing);
-//            LiveData<Boolean> isFlashAvailable = cameraInfo.isFlashAvailable();
-//            flashToggle.setVisibility(isFlashAvailable.getValue() ? View.VISIBLE : View.INVISIBLE);
-//        } catch (CameraInfoUnavailableException e) {
-//            Log.w(TAG, "Cannot get flash available information", e);
-//            flashToggle.setVisibility(View.VISIBLE);
-//
-//        }}
+// **************** Checks to see if flash is present on the current camera and *********************
+//            try {
+//                CameraInfo cameraInfo = CameraX.getCameraInfo(camera);
+//                LiveData<Boolean> isFlashAvailable = cameraInfo.isFlashAvailable();
+//                fab_flash.setVisibility(isFlashAvailable.getValue() ? View.VISIBLE : View.INVISIBLE);
+//            } catch (CameraInfoUnavailableException e) {
+//                Log.w(TAG, "Cannot get flash available information", e);
+//                fab_flash.setVisibility(View.VISIBLE);
+//            }
         }
     }
-
 
 
 }
