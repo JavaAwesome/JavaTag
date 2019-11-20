@@ -143,20 +143,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         };
 
-//        //for sleep/delays; https://stackoverflow.com/questions/24104313/how-do-i-make-a-delay-in-java
-//        executorService = Executors.newSingleThreadScheduledExecutor();
-//        executorService.scheduleAtFixedRate(new Runnable() {
-//            @Override
-//            public void run() {
-//                myTask();
-//            }
-//        }, 0, 1, TimeUnit.SECONDS);
-
-//        mFusedLocationClient.requestLocationUpdates(getLocationRequest(), mLocationCallback, null);
-    }
-
-    private void myTask() {
-        Log.i(TAG, "running");
     }
 
     private void sendUserLocationQuery(LocationResult locationResult) {
@@ -186,8 +172,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onStop() {
         super.onStop();
         stopTrackingLocation();
-//        executorService.shutdown();
-
     }
 
     @Override
@@ -214,7 +198,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setOnMyLocationButtonClickListener(this);
         mMap.setOnMyLocationClickListener(this);
 
-        //TODO: Still need to send the player's location to DB on a timer for updates
         startLocationUpdates();
     }
 
@@ -222,7 +205,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mFusedLocationClient.removeLocationUpdates(mLocationCallback);
     }
 
-    // Starts pulling location updates from the DB
+    // Starts pulling location updates from the DB. 3 second delay to let the aws callbacks load first.
     private void startLocationUpdates() {
         try {
             TimeUnit.SECONDS.sleep(3);
@@ -250,7 +233,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         LocationRequest locationRequest = new LocationRequest();
         locationRequest.setInterval(10000);
         locationRequest.setFastestInterval(5000);
-//        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
         return locationRequest;
     }
@@ -304,17 +286,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 playersJustGotTagged.add(player);
                 player.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(itHue));
                 player.getCircle().setStrokeColor(itColor);
+
+                //TODO need to send the new markers to the map. Need to render the changes
 //                mMap.addCircle(player.getCircle());
             }
-
-            //TODO: add notifications based on tag changes
-//            if (player.isIt()) {
-//                player.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(itHue));
-//                player.getCircle().setStrokeColor(itColor);
-//            } else {
-//                player.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(notItHue));
-//                player.getCircle().setStrokeColor(notItColor);
-//            }
         }
 
         itPlayers.addAll(playersJustGotTagged);
@@ -370,6 +345,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             if (isTagged(player, itPlayer)) {
 //                Toast.makeText(this, "" + player.getUsername() + " is now it!!!", Toast.LENGTH_SHORT);
                 //TODO: If future views added to app, may need to change "this"?
+
+                //TODO: this activity traps the user, so disabled for now.
 //                startActivity(new Intent(MapsActivity.this, NotificationActivity.class));
                 return true;
 
@@ -449,6 +426,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             startingPoint = new LatLng(currentSession.lat(), currentSession.lon());
             Log.i(TAG, "Starting point is " + startingPoint);
 
+            //once the session ID and starting loc are in place, then make the first player.
             if (playerID == null) {
                 createPlayer();
             } else {
