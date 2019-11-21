@@ -22,6 +22,8 @@ import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
+
 import com.amazonaws.amplify.generated.graphql.CreatePlayerMutation;
 import com.amazonaws.amplify.generated.graphql.CreateSessionMutation;
 import com.amazonaws.amplify.generated.graphql.ListPlayersQuery;
@@ -128,28 +130,33 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
     public void goToMap(View view) {
         // TODO: check if player already exist in the database
         EditText sessionName = findViewById(R.id.editText_session_name);
-        CreateSessionInput input = CreateSessionInput.builder()
-                .title(sessionName.getText().toString())
-                .lat(currentUserLocation.latitude)
-                .lon(currentUserLocation.longitude)
-                .radius(500)
-                .build();
-        CreateSessionMutation createSessionMutation = CreateSessionMutation.builder().input(input).build();
-        awsAppSyncClient.mutate(createSessionMutation).enqueue(new GraphQLCall.Callback<CreateSessionMutation.Data>() {
-            @Override
-            public void onResponse(@Nonnull Response<CreateSessionMutation.Data> response) {
-                sessionId = response.data().createSession().id();
-                Intent goToMapIntent = new Intent(MainActivity.this, MapsActivity.class);
-                goToMapIntent.putExtra("sessionId", sessionId);
-                goToMapIntent.putExtra("userID", playerId);
-                MainActivity.this.startActivity(goToMapIntent);
-            }
-            @Override
-            public void onFailure(@Nonnull ApolloException e) {
-                Log.e(TAG, "error in creating new game session" + e.getMessage());
-            }
-        });
+        Log.i(TAG, "goToMap: "+sessionName.getText());
+        if(sessionName.getText().length()>0) {
+            CreateSessionInput input = CreateSessionInput.builder()
+                    .title(sessionName.getText().toString())
+                    .lat(currentUserLocation.latitude)
+                    .lon(currentUserLocation.longitude)
+                    .radius(500)
+                    .build();
+            CreateSessionMutation createSessionMutation = CreateSessionMutation.builder().input(input).build();
+            awsAppSyncClient.mutate(createSessionMutation).enqueue(new GraphQLCall.Callback<CreateSessionMutation.Data>() {
+                @Override
+                public void onResponse(@Nonnull Response<CreateSessionMutation.Data> response) {
+                    sessionId = response.data().createSession().id();
+                    Intent goToMapIntent = new Intent(MainActivity.this, MapsActivity.class);
+                    goToMapIntent.putExtra("sessionId", sessionId);
+                    goToMapIntent.putExtra("userID", playerId);
+                    MainActivity.this.startActivity(goToMapIntent);
+                }
 
+                @Override
+                public void onFailure(@Nonnull ApolloException e) {
+                    Log.e(TAG, "error in creating new game session" + e.getMessage());
+                }
+            });
+        }else{
+            Toast.makeText(getBaseContext(), "Please enter a session title.",Toast.LENGTH_LONG).show();
+        }
     }
 
     //////// TEST BUTTON /////
