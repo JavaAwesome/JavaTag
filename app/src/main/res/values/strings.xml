@@ -10,4 +10,5 @@
     <string name="infected_confirmation">I\'ve been infected!</string>
     <string name="session_title">Session Title</string>
     <string name="session_total_players">Session Total Players</string>
+    <string name="icon_credit">Virus icon made by Freepik from Flaticon</string>
 </resources>
