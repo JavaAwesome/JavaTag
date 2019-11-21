@@ -68,6 +68,7 @@ public class ShowMeYourFace extends AppCompatActivity {
         super.onResume();
         if(upload && profPicPath != null && profilePic != null){
             uploadDataToS3(profPicPath,profilePic);
+            finish();
         }
     }
 
@@ -130,7 +131,6 @@ public class ShowMeYourFace extends AppCompatActivity {
                         String msg = "file saved at " + file.getAbsolutePath();
                         Log.i(TAG, "onImageSaved: "+msg);
                         goToPicturePreview(file.getAbsolutePath());
-
 
                     }
                 });
@@ -233,7 +233,7 @@ public class ShowMeYourFace extends AppCompatActivity {
     }
 
 //************************************    Upload to S3          **********************************************
-    protected void uploadDataToS3(String profilePicPath, File profilePic){
+    protected void uploadDataToS3( String profilePicPath, File profilePic){
         TransferUtility transferUtility =
                 TransferUtility.builder()
                         .context(getApplicationContext())
@@ -250,6 +250,7 @@ public class ShowMeYourFace extends AppCompatActivity {
             public void onStateChanged(int id, TransferState state) {
                 if (TransferState.COMPLETED == state) {
                     upload=false;
+                    Log.i(TAG, "onStateChanged: Uploaded Profile Pic");
                     Toast.makeText(getBaseContext(), "Picture Save Complete",Toast.LENGTH_LONG).show();
                 }
             }

@@ -24,7 +24,7 @@ public class picturePreview extends AppCompatActivity {
         String TAG = "ahren:picturePreview";
         ImageView profilePicPreview;
         Log.i(TAG, "onCreate: hello");
-
+//TODO look at passing in the file and uploading here rather than
         ImageView pic = findViewById(R.id.profilePicPreview);
         String picPath = getIntent().getStringExtra("picpath");
         pic.setImageURI(Uri.parse(picPath));
