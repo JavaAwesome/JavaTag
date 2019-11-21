@@ -3,7 +3,7 @@
 ## APK
 To download and play Zombie Tag click the zombie below  
 
-[![Build Status](https://github.com/JavaAwesome/JavaTag/blob/Dev/app/src/main/res/mipmap-hdpi/ic_launcher_round.png)](https://github.com/JavaAwesome/JavaTag/blob/Dev/output.json)
+[![Build Status](https://github.com/JavaAwesome/JavaTag/blob/Dev/app/src/main/res/mipmap-hdpi/ic_launcher_round.png)](https://github.com/JavaAwesome/JavaTag/blob/Dev/zombietag.apk)
 
 ## Team Members
 * Ahren Swett
