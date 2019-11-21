@@ -84,6 +84,19 @@ No contribution guidelines at this point.
 * Allowed players to join existing sessions  
 
 #### Day 3
+* Camera logic is mostly config complete, need to save and pull from database
+    * Added a new permission for CAMERA
+* Figured out more logic of updating users in the database
+    * A users lat/lon will now update when moving
+* Created logic to prevent duplicate users each time we login/start app
+* Completed logic to render players on a map live!
+    * When a player joins a game, it creates their initial markers
+        * When a player moves, the markers moves
+	     * When it marker collides with not it, not it becomes tagged
+	     * When a player creates a session, it no longer crashes
+* Started styling the app!
+    * Figured out how to create a custom icon, theme, action bar, animations, and button design
+    * Started working on map pin icon
 
 #### Day 4
 
