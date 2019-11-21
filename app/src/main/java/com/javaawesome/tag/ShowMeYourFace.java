@@ -112,7 +112,8 @@ public class ShowMeYourFace extends AppCompatActivity {
 //***************************************   Shutter Button Action ****************************************
 
             picSnap.setOnClickListener(event -> {
-                profilePic = new File(Environment.getExternalStorageDirectory() + "/" + AWSMobileClient.getInstance().getUsername()+ "profilePic.png");
+                String s3path = AWSMobileClient.getInstance().getUsername()+ "profilePic.png";
+                profilePic = new File(Environment.getExternalStorageDirectory() + "/" + s3path);
 //
 //              Why what is it used for??????? I believe that this runs the camera take pic
                 Executor executor = Executors.newSingleThreadExecutor();
