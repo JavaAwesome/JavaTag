@@ -254,7 +254,7 @@ public class ShowMeYourFace extends AppCompatActivity {
                     upload=false;
                     Log.i(TAG, "onStateChanged: Uploaded Profile Pic");
                     Toast.makeText(getBaseContext(), "Picture Save Complete",Toast.LENGTH_LONG).show();
-                    String bucketPath = uploadObserver.getBucket() +"/" +uploadObserver.getKey();
+                    String bucketPath ="https://" + uploadObserver.getBucket() + ".s3-us-west-2.amazonaws.com/" +uploadObserver.getKey();
                     Log.i(TAG, "onStateChanged: " + bucketPath + "*************************************************************************");
                 }
             }

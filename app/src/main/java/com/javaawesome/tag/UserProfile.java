@@ -18,7 +18,7 @@ public class UserProfile extends AppCompatActivity {
         setContentView(R.layout.activity_user_profile);
 
         ImageView profPic = findViewById(R.id.profilePicture);
-        profPic.
+
 
         TextView username = findViewById(R.id.username);
         username.setText(AWSMobileClient.getInstance().getUsername());
