@@ -372,6 +372,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     private void updateMarkerAndCircleForAllPlayers(List<Player> players) {
+        Log.i(TAG, "updating markers");
+        Log.i(TAG, "How many players? " + players.size());
+
         if(itPlayers == null){
             itPlayers = new LinkedList<>();
             for(Player player : players) {
@@ -379,13 +382,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     itPlayers.add(player);
                 }
             }
+
             if (itPlayers.isEmpty()) {
                 itPlayers.add(players.get(0));
             }
         }
 
-        Log.i(TAG, "updating markers");
-        Log.i(TAG, "How many players? " + players.size());
         List<Player> playersJustGotTagged = new LinkedList<>();
         for (Player player : players) {
             player.getMarker().setPosition(player.getLastLocation());
@@ -531,6 +533,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                     circle.setStrokeColor(notItColor);
                                 }
 
+                                if(players == null){
+                                    players = new LinkedList<>();
+                                }
+
                                 player.setCircle(circle);
                                 player.setMarker(marker);
                                 //adding player to the list of players in the game
@@ -562,20 +568,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             } else {
                 queryForPlayerObject();
             }
+
             Log.i(TAG, "Made it to the after the if/else within getSessionCallBack");
             //converting from GetSessionItems to players
             players = playerConverter(currentSession.players().items());
-//            if(itPlayers == null){
-//                itPlayers = new LinkedList<>();
-//                for(Player player : players) {
-//                    if (player.isIt()) {
-//                        itPlayers.add(player);
-//                    }
-//                }
-//                if (itPlayers.isEmpty()) {
-//                    itPlayers.add(players.get(0));
-//                }
-//            }
+
             Handler h = new Handler(Looper.getMainLooper()){
                 @Override
                 public void handleMessage(Message inputMessage){
