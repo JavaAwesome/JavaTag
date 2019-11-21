@@ -182,18 +182,67 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     @Override
                     public void handleMessage (Message inputMessage) {
                         // Iterate over the players on the map
-                        for(Player player : players) {
-                            if(response.data().onUpdatePlayer().id().equals(player.getId())) {
-                                // if true (we have a match) update players lat/long
-                                List<LatLng> bananasList = new LinkedList<>();
-                                bananasList.add(new LatLng(response.data().onUpdatePlayer().lat(),
-                                        response.data().onUpdatePlayer().lon()));
-                                player.setLocations(bananasList); // sets location for the player
-                                //Might have been causing the starting point to move
-//                                player.getCircle().setCenter(player.getLastLocation());
-//                                player.getMarker().setPosition(player.getLastLocation());
+                        //TODO: if session matches; then if player in players update location, else make a new player and add their marker.
+                        OnUpdatePlayerSubscription.OnUpdatePlayer updatePlayer = response.data().onUpdatePlayer();
+
+                        Log.i(TAG, "updated user is " + updatePlayer.toString() + " session id is " + sessionId);
+                        //checking if the updated player is in this session
+                        if(updatePlayer.session().id().equals(sessionId)){
+                            boolean contains = false;
+
+                            //checking if the updated player is in the current player list
+                            for(Player player : players){
+
+                                // if we have a match update players lat/long
+                                if(updatePlayer.id().equals(player.getId())){
+                                    List<LatLng> bananasList = new LinkedList<>();
+                                    bananasList.add(new LatLng(response.data().onUpdatePlayer().lat(),
+                                            response.data().onUpdatePlayer().lon()));
+                                    player.setLocations(bananasList); // sets location for the player
+                                    contains = true;
+                                }
+                            }
+
+                            //if the player is in the session, but not in the player list, then make a new player and add them to the players list and add a marker
+                            if(contains ==  false){
+                                Marker marker = mMap.addMarker(new MarkerOptions()
+                                        .position(player.getLastLocation())
+                                        .title(player.getUsername()));
+                                Circle circle = mMap.addCircle(new CircleOptions()
+                                        .center(player.getLastLocation())
+                                        .radius(tagDistance)
+                                        .fillColor(Color.TRANSPARENT)
+                                        .strokeWidth(3));
+
+                                marker.setIcon(BitmapDescriptorFactory.defaultMarker(notItHue));
+                                circle.setStrokeColor(notItColor);
+
+                                Player newPlayer = new Player();
+                                newPlayer.setId(updatePlayer.id());
+                                newPlayer.setIt(false);
+                                newPlayer.setMarker(marker);
+                                newPlayer.setCircle(circle);
+                                newPlayer.setUsername(updatePlayer.username());
+                                List<LatLng> potatoes = new LinkedList<>();
+                                potatoes.add(new LatLng(updatePlayer.lat(), updatePlayer.lon()));
+                                newPlayer.setLocations(potatoes);
+
+                                //adding player to the list of players in the game
+                                players.add(newPlayer);
                             }
                         }
+//                        for(Player player : players) {
+//                            if(response.data().onUpdatePlayer().id().equals(player.getId())) {
+//                                // if true (we have a match) update players lat/long
+//                                List<LatLng> bananasList = new LinkedList<>();
+//                                bananasList.add(new LatLng(response.data().onUpdatePlayer().lat(),
+//                                        response.data().onUpdatePlayer().lon()));
+//                                player.setLocations(bananasList); // sets location for the player
+//                                //Might have been causing the starting point to move
+////                                player.getCircle().setCenter(player.getLastLocation());
+////                                player.getMarker().setPosition(player.getLastLocation());
+//                            }
+//                        }
                     }
                 };
                 h.obtainMessage().sendToTarget();
