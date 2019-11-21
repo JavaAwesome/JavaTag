@@ -62,6 +62,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
     LatLng currentUserLocation;
     LocationManager locationManager;
     AlertDialog alert;
+    private final int distanceForNearbySessions = 1000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,7 +119,6 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         } else {
             buildAlertMessageNoGps();
         }
-        queryAllSessions();
     }
 
     // Create new game session and go to map page
@@ -239,7 +239,8 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
                 @Override
                 public void handleMessage(Message inputMessage) {
                     sessions.clear();
-                    sessions.addAll(response.data().listSessions().items());
+                    List<ListSessionsQuery.Item> filteredSessions = filterSessionsBasedOnDistance(response.data().listSessions().items());
+                    sessions.addAll(filteredSessions);
                     sessionAdapter.notifyDataSetChanged();
                 }
             };
@@ -264,6 +265,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
                         @Override
                         public void run() {
                             currentUserLocation = new LatLng(location.getLatitude(), location.getLongitude());
+                            queryAllSessions();
                             Log.i(TAG, "playerId in getcurrentUserlocation " + playerId);
                             if (playerId == null) {
                                 createPlayer();
@@ -333,6 +335,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         });
     }
 
+    // Checks if Gps Location is turned on or not on the user's phone
     private boolean checkGpsStatus() {
         locationManager = (LocationManager)getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
@@ -354,5 +357,20 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
                 });
         alert = builder.create();
         alert.show();
+    }
+
+    // filter out list of sessions to a smaller list that consist of sessions nearby the player's location
+    private List<ListSessionsQuery.Item> filterSessionsBasedOnDistance(List<ListSessionsQuery.Item> allSessions) {
+        List<ListSessionsQuery.Item> filteredSessions = new LinkedList<>();
+        for (ListSessionsQuery.Item session : allSessions) {
+            double distanceBetweenSessionAndPlayer = Utility.distanceBetweenLatLongPoints(currentUserLocation.latitude,
+                    currentUserLocation.longitude,
+                    session.lat(),
+                    session.lon());
+            if (distanceBetweenSessionAndPlayer < distanceForNearbySessions) {
+                filteredSessions.add(session);
+            }
+        }
+        return filteredSessions;
     }
 }

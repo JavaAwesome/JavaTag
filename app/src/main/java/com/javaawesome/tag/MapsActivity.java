@@ -96,15 +96,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // initialize connection with google location services
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        mFusedLocationClient.getLastLocation()
-                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        if(location != null){
-                            startingPoint = new LatLng(location.getLatitude(), location.getLongitude());
-                        }
-                    }
-                });
+//        mFusedLocationClient.getLastLocation()
+//                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+//                    @Override
+//                    public void onSuccess(Location location) {
+//                        if(location != null){
+//                            startingPoint = new LatLng(location.getLatitude(), location.getLongitude());
+//                        }
+//                    }
+//                });
 
         // establish connection to AWS
         awsAppSyncClient = AWSAppSyncClient.builder()
@@ -344,7 +344,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 player.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(itHue));
                 player.getCircle().setStrokeColor(itColor);
 
-
 //                mMap.addCircle(player.getCircle());
             }
         }
@@ -357,7 +356,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     // Equation is from https://stackoverflow.com/questions/639695/how-to-convert-latitude-or-longitude-to-meters
     // convert to two location points to distance between them in meters
-    private double distanceBetweenLatLongPoints(double lat1, double long1, double lat2, double long2) {
+    protected double distanceBetweenLatLongPoints(double lat1, double long1, double lat2, double long2) {
         // radius of the Earth in km
         double R = 6378.137;
         double dLat = (lat2 * Math.PI / 180) - (lat1 * Math.PI / 180);
