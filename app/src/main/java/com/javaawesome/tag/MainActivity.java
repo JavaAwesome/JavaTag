@@ -187,7 +187,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
     public void joinExistingGameSession(ListSessionsQuery.Item session) {
         Intent goToMapIntent = new Intent(this, MapsActivity.class);
         goToMapIntent.putExtra("sessionId", session.id());
-        goToMapIntent.putExtra("userId", playerId);
+        goToMapIntent.putExtra("userID", playerId);
         this.startActivity(goToMapIntent);
     }
 
@@ -286,7 +286,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
                         String playerName = AWSMobileClient.getInstance().getUsername();
                         List<ListPlayersQuery.Item> players = response.data().listPlayers().items();
                         for(ListPlayersQuery.Item player : players){
-                            if(playerName.equals(player.username())){
+                            if(player.username().equals(playerName)) {
                                 Log.i(TAG, "Username match " + playerName + " " + player.id());
                                 playerId = player.id();
                                 getCurrentUserLocation();

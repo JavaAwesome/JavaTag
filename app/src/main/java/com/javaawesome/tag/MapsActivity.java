@@ -188,32 +188,37 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         private AppSyncSubscriptionCall.Callback<OnUpdatePlayerSubscription.Data> subCallback = new AppSyncSubscriptionCall.Callback<OnUpdatePlayerSubscription.Data>() {
             @Override
-            public void onResponse(@Nonnull Response<OnUpdatePlayerSubscription.Data> response) {
-                Log.i("sharina", "************* !!!! *******" + response.data().toString());
+            public void onResponse(@Nonnull final Response<OnUpdatePlayerSubscription.Data> response) {
+                Log.i(TAG, "************* !!!! *******" + response.data().toString());
 
-                // Iterate over the players on the map
-                for(Player player : players) {
-                    if(response.data().onUpdatePlayer().id().equals(player.getId())) {
-                        // if true (we have a match) update players lat/long
-                        List<LatLng> bananasList = new LinkedList<>();
-                        bananasList.add(new LatLng(response.data().onUpdatePlayer().lat(),
-                                response.data().onUpdatePlayer().lon()));
-                        player.setLocations(bananasList); // sets location for the player
-                        player.getCircle().setCenter(player.getLastLocation());
-                        player.getMarker().setPosition(player.getLastLocation());
+                Handler h = new Handler(Looper.getMainLooper()) {
+                    @Override
+                    public void handleMessage (Message inputMessage) {
+                        // Iterate over the players on the map
+                        for(Player player : players) {
+                            if(response.data().onUpdatePlayer().id().equals(player.getId())) {
+                                // if true (we have a match) update players lat/long
+                                List<LatLng> bananasList = new LinkedList<>();
+                                bananasList.add(new LatLng(response.data().onUpdatePlayer().lat(),
+                                        response.data().onUpdatePlayer().lon()));
+                                player.setLocations(bananasList); // sets location for the player
+                                player.getCircle().setCenter(player.getLastLocation());
+                                player.getMarker().setPosition(player.getLastLocation());
+                            }
+                        }
                     }
-                }
-
+                };
+                h.obtainMessage().sendToTarget();
             }
 
             @Override
             public void onFailure(@Nonnull ApolloException e) {
-                Log.e("sharina", e.toString());
+                Log.e(TAG, e.toString());
             }
 
         @Override
         public void onCompleted() {
-            Log.i("sharina", "Subscription completed ");
+            Log.i(TAG, "Subscription completed ");
         }
     };
 
@@ -229,6 +234,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onResume() {
         super.onResume();
         subscribe();
+//        startLocationUpdates();
     }
 
     /**
@@ -292,6 +298,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     // Creates markers and circles for each player in the list for that session
     private void initializeMarkersAndCirclesForPlayers(List<Player> players) {
+        Log.i(TAG, "made it to initialized markers");
         for(Player player: players) {
             Marker marker = mMap.addMarker(new MarkerOptions()
                     .position(player.getLastLocation())
@@ -314,16 +321,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             player.setCircle(circle);
             player.setMarker(marker);
 
-            //      Add a marker in center of game camera and move the camera
-            mMap.moveCamera(CameraUpdateFactory.zoomTo(16));
-            mMap.moveCamera(CameraUpdateFactory.newLatLng(startingPoint));
-            Circle gameBounds = mMap.addCircle(new CircleOptions()
-                    .center(startingPoint)
-                    .radius(currentSession.radius())
-                    .strokeColor(Color.BLUE)
-                    .fillColor(Color.TRANSPARENT)
-                    .strokeWidth(5));
         }
+        //      Add a marker in center of game camera and move the camera
+        mMap.moveCamera(CameraUpdateFactory.zoomTo(16));
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(startingPoint));
+        Circle gameBounds = mMap.addCircle(new CircleOptions()
+                .center(startingPoint)
+                .radius(currentSession.radius())
+                .strokeColor(Color.BLUE)
+                .fillColor(Color.TRANSPARENT)
+                .strokeWidth(5));
     }
 
 
@@ -340,11 +347,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 player.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(itHue));
                 player.getCircle().setStrokeColor(itColor);
 
-                //TODO need to send the new markers to the map. Need to render the changes
+
 //                mMap.addCircle(player.getCircle());
             }
         }
-
+        if(itPlayers == null){
+            itPlayers = new LinkedList<>();
+            itPlayers.add(players.get(0));
+        }
         itPlayers.addAll(playersJustGotTagged);
     }
 
@@ -457,6 +467,36 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         Log.i(TAG, "made it to making a query for player object");
                         // make a player instance
                         player = new Player(response.data().getPlayer());
+
+                        // Making stuff on the map for the player
+                        Handler markerHandler = new Handler(Looper.getMainLooper()){
+                            @Override
+                            public void handleMessage (Message inputMessage) {
+                                Marker marker = mMap.addMarker(new MarkerOptions()
+                                        .position(player.getLastLocation())
+                                        .title(player.getUsername()));
+                                Circle circle = mMap.addCircle(new CircleOptions()
+                                        .center(player.getLastLocation())
+                                        .radius(tagDistance)
+                                        .fillColor(Color.TRANSPARENT)
+                                        .strokeWidth(3));
+
+                                // change color of marker depending on if player is it or not
+                                if (player.isIt()) {
+                                    marker.setIcon(BitmapDescriptorFactory.defaultMarker(itHue));
+                                    circle.setStrokeColor(itColor);
+                                } else {
+                                    marker.setIcon(BitmapDescriptorFactory.defaultMarker(notItHue));
+                                    circle.setStrokeColor(notItColor);
+                                }
+
+                                player.setCircle(circle);
+                                player.setMarker(marker);
+                                //adding player to the list of players in the game
+                                players.add(player);
+                            }
+                        };
+                        markerHandler.obtainMessage().sendToTarget();
                     }
 
                     @Override
@@ -481,13 +521,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             } else {
                 queryForPlayerObject();
             }
-
+            Log.i(TAG, "Made it to the after the if/else within getSessionCallBack");
             //converting from GetSessionItems to players
             players = playerConverter(currentSession.players().items());
             Handler h = new Handler(Looper.getMainLooper()){
                 @Override
                 public void handleMessage(Message inputMessage){
+                    Log.i(TAG, "Made it to handleMessage");
                     //lat and long for the session
+
+                    try {
+                        TimeUnit.SECONDS.sleep(1);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     initializeMarkersAndCirclesForPlayers(players);
 
                 }
