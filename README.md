@@ -1,8 +1,9 @@
 # JavaTag: Code 401 Final Project
 
 ## APK
-To download and play Zombie Tag
-![download-version](https://github.com/javaawesome/javatag/output.json)
+To download and play Zombie Tag click the zombie below  
+
+[![Build Status](https://github.com/JavaAwesome/JavaTag/blob/Dev/app/src/main/res/mipmap-hdpi/ic_launcher_round.png)](https://github.com/JavaAwesome/JavaTag/blob/Dev/output.json)
 
 ## Team Members
 * Ahren Swett
