@@ -1,9 +1,9 @@
 <resources>
 
     <style name="InfectionTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <item name="colorPrimary">#e48124</item>
-        <item name="colorPrimaryDark">#ac5300</item>
-        <item name="colorAccent">#ffb155</item>
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/secondaryColor</item>
         <item name="android:colorBackground">@color/backgroundTint</item>
         <item name="colorButtonNormal">@color/secondaryColor</item>
         <item name="colorControlHighlight">@color/secondaryLightColor</item>

@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#e48124</color>
-    <color name="colorPrimaryDark">#ac5300</color>
-    <color name="colorAccent">#ffb155</color>
-    <color name="secondaryColor">#ffd900</color>
-    <color name="secondaryLightColor">#ffff53</color>
-    <color name="secondaryDarkColor">#c7a800</color>
+    <color name="colorPrimary">#81cba8</color> //Green medium
+    <color name="colorPrimaryDark">#005d48</color> //Green dark
+    <color name="colorAccent">#c2dfa7</color> //Green main skin tone
+    <color name="secondaryColor">#70af92</color> //Green medium dark
+    <color name="secondaryLightColor">#f484b4</color>
+    <color name="secondaryDarkColor">#df4897</color>
     <color name="primaryTextColor">#000000</color>
     <color name="secondaryTextColor">#000000</color>
-    <color name="backgroundTint">#E1E2E1</color>
+    <color name="backgroundTint">#c2dfa7</color>
 </resources>
