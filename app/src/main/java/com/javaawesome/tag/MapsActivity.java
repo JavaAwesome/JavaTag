@@ -189,17 +189,31 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         private AppSyncSubscriptionCall.Callback<OnUpdatePlayerSubscription.Data> subCallback = new AppSyncSubscriptionCall.Callback<OnUpdatePlayerSubscription.Data>() {
             @Override
             public void onResponse(@Nonnull Response<OnUpdatePlayerSubscription.Data> response) {
-                Log.i(TAG, response.data().toString());
+                Log.i("sharina", "************* !!!! *******" + response.data().toString());
+
+                // Iterate over the players on the map
+                for(Player player : players) {
+                    if(response.data().onUpdatePlayer().id().equals(player.getId())) {
+                        // if true (we have a match) update players lat/long
+                        List<LatLng> bananasList = new LinkedList<>();
+                        bananasList.add(new LatLng(response.data().onUpdatePlayer().lat(),
+                                response.data().onUpdatePlayer().lon()));
+                        player.setLocations(bananasList); // sets location for the player
+                        player.getCircle().setCenter(player.getLastLocation());
+                        player.getMarker().setPosition(player.getLastLocation());
+                    }
+                }
+
             }
 
             @Override
             public void onFailure(@Nonnull ApolloException e) {
-                Log.e(TAG, e.toString());
+                Log.e("sharina", e.toString());
             }
 
         @Override
         public void onCompleted() {
-            Log.i(TAG, "Subscription completed ");
+            Log.i("sharina", "Subscription completed ");
         }
     };
 
@@ -215,7 +229,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onResume() {
         super.onResume();
         subscribe();
-        startLocationUpdates();
+//        startLocationUpdates();
     }
 
     /**
