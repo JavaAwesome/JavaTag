@@ -169,9 +169,9 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
     }
 
     ///////////// Turn on Camera ///////////////////
-    public void goToCameraClass(View view){
-        Intent goToCamera = new Intent(this, ShowMeYourFace.class);
-        this.startActivity(goToCamera);
+    public void goToProfile(View view){
+        Intent goToProfile = new Intent(this, UserProfile.class);
+        this.startActivity(goToProfile);
     }
 
     /////////////
