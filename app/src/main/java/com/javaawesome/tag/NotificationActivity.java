@@ -21,7 +21,6 @@ public class NotificationActivity extends AppCompatActivity {
         vibrator.vibrate(1000);
     }
 
-
     public void acknowledgePlayerIsIt (View view) {
         finish();
     }

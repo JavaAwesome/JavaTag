@@ -96,16 +96,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // initialize connection with google location services
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-//        mFusedLocationClient.getLastLocation()
-//                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-//                    @Override
-//                    public void onSuccess(Location location) {
-//                        if(location != null){
-//                            startingPoint = new LatLng(location.getLatitude(), location.getLongitude());
-//                        }
-//                    }
-//                });
-
         // establish connection to AWS
         awsAppSyncClient = AWSAppSyncClient.builder()
                 .context(getApplicationContext())
@@ -192,17 +182,67 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     @Override
                     public void handleMessage (Message inputMessage) {
                         // Iterate over the players on the map
-                        for(Player player : players) {
-                            if(response.data().onUpdatePlayer().id().equals(player.getId())) {
-                                // if true (we have a match) update players lat/long
-                                List<LatLng> bananasList = new LinkedList<>();
-                                bananasList.add(new LatLng(response.data().onUpdatePlayer().lat(),
-                                        response.data().onUpdatePlayer().lon()));
-                                player.setLocations(bananasList); // sets location for the player
-                                player.getCircle().setCenter(player.getLastLocation());
-                                player.getMarker().setPosition(player.getLastLocation());
+                        //TODO: if session matches; then if player in players update location, else make a new player and add their marker.
+                        OnUpdatePlayerSubscription.OnUpdatePlayer updatePlayer = response.data().onUpdatePlayer();
+
+                        Log.i(TAG, "updated user is " + updatePlayer.toString() + " session id is " + sessionId);
+                        //checking if the updated player is in this session
+                        if(updatePlayer.session().id().equals(sessionId)){
+                            boolean contains = false;
+
+                            //checking if the updated player is in the current player list
+                            for(Player player : players){
+
+                                // if we have a match update players lat/long
+                                if(updatePlayer.id().equals(player.getId())){
+                                    List<LatLng> bananasList = new LinkedList<>();
+                                    bananasList.add(new LatLng(response.data().onUpdatePlayer().lat(),
+                                            response.data().onUpdatePlayer().lon()));
+                                    player.setLocations(bananasList); // sets location for the player
+                                    contains = true;
+                                }
+                            }
+
+                            //if the player is in the session, but not in the player list, then make a new player and add them to the players list and add a marker
+                            if(contains ==  false){
+                                Marker marker = mMap.addMarker(new MarkerOptions()
+                                        .position(player.getLastLocation())
+                                        .title(player.getUsername()));
+                                Circle circle = mMap.addCircle(new CircleOptions()
+                                        .center(player.getLastLocation())
+                                        .radius(tagDistance)
+                                        .fillColor(Color.TRANSPARENT)
+                                        .strokeWidth(3));
+
+                                marker.setIcon(BitmapDescriptorFactory.defaultMarker(notItHue));
+                                circle.setStrokeColor(notItColor);
+
+                                Player newPlayer = new Player();
+                                newPlayer.setId(updatePlayer.id());
+                                newPlayer.setIt(false);
+                                newPlayer.setMarker(marker);
+                                newPlayer.setCircle(circle);
+                                newPlayer.setUsername(updatePlayer.username());
+                                List<LatLng> potatoes = new LinkedList<>();
+                                potatoes.add(new LatLng(updatePlayer.lat(), updatePlayer.lon()));
+                                newPlayer.setLocations(potatoes);
+
+                                //adding player to the list of players in the game
+                                players.add(newPlayer);
                             }
                         }
+//                        for(Player player : players) {
+//                            if(response.data().onUpdatePlayer().id().equals(player.getId())) {
+//                                // if true (we have a match) update players lat/long
+//                                List<LatLng> bananasList = new LinkedList<>();
+//                                bananasList.add(new LatLng(response.data().onUpdatePlayer().lat(),
+//                                        response.data().onUpdatePlayer().lon()));
+//                                player.setLocations(bananasList); // sets location for the player
+//                                //Might have been causing the starting point to move
+////                                player.getCircle().setCenter(player.getLastLocation());
+////                                player.getMarker().setPosition(player.getLastLocation());
+//                            }
+//                        }
                     }
                 };
                 h.obtainMessage().sendToTarget();
@@ -332,6 +372,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     private void updateMarkerAndCircleForAllPlayers(List<Player> players) {
+        if(itPlayers == null){
+            itPlayers = new LinkedList<>();
+            for(Player player : players) {
+                if (player.isIt()) {
+                    itPlayers.add(player);
+                }
+            }
+            if (itPlayers.isEmpty()) {
+                itPlayers.add(players.get(0));
+            }
+        }
+
         Log.i(TAG, "updating markers");
         Log.i(TAG, "How many players? " + players.size());
         List<Player> playersJustGotTagged = new LinkedList<>();
@@ -347,16 +399,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 //                mMap.addCircle(player.getCircle());
             }
         }
-        if(itPlayers == null){
-            itPlayers = new LinkedList<>();
-            itPlayers.add(players.get(0));
-        }
         itPlayers.addAll(playersJustGotTagged);
     }
 
     // Equation is from https://stackoverflow.com/questions/639695/how-to-convert-latitude-or-longitude-to-meters
     // convert to two location points to distance between them in meters
-    protected double distanceBetweenLatLongPoints(double lat1, double long1, double lat2, double long2) {
+    private double distanceBetweenLatLongPoints(double lat1, double long1, double lat2, double long2) {
         // radius of the Earth in km
         double R = 6378.137;
         double dLat = (lat2 * Math.PI / 180) - (lat1 * Math.PI / 180);
@@ -379,7 +427,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         Log.i(TAG, "distance between players is " + distanceBetweenPlayers + " meters");
 
-        if (distanceBetweenPlayers < tagDistance) {
+//        if (distanceBetweenPlayers < tagDistance) {
+        if (distanceBetweenPlayers < tagDistance && itPlayer != player) {
             player.setIt(true);
             return true;
         } else {
@@ -391,10 +440,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Log.i(TAG, "Made it into checkForTag");
         if (player.isIt()) {
             return false;
-        }
-        if(itPlayers == null){
-            itPlayers = new LinkedList<>();
-            itPlayers.add(players.get(0));
         }
         for(Player itPlayer : itPlayers) {
             Log.i(TAG, itPlayer.toString());
@@ -520,6 +565,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Log.i(TAG, "Made it to the after the if/else within getSessionCallBack");
             //converting from GetSessionItems to players
             players = playerConverter(currentSession.players().items());
+//            if(itPlayers == null){
+//                itPlayers = new LinkedList<>();
+//                for(Player player : players) {
+//                    if (player.isIt()) {
+//                        itPlayers.add(player);
+//                    }
+//                }
+//                if (itPlayers.isEmpty()) {
+//                    itPlayers.add(players.get(0));
+//                }
+//            }
             Handler h = new Handler(Looper.getMainLooper()){
                 @Override
                 public void handleMessage(Message inputMessage){
