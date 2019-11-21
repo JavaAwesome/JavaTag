@@ -48,6 +48,7 @@ public class ShowMeYourFace extends AppCompatActivity {
     private ImageCapture imageCapture;
     final CameraX.LensFacing camera = CameraX.LensFacing.FRONT;
     String profPicPath = null;
+    String s3path = null;
     AWSAppSyncClient mAWSAppSyncClient;
     File profilePic = null;
 
@@ -67,7 +68,7 @@ public class ShowMeYourFace extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         if(upload && profPicPath != null && profilePic != null){
-            uploadDataToS3(profPicPath,profilePic);
+            uploadDataToS3(s3path, profilePic);
             finish();
         }
     }
@@ -112,12 +113,12 @@ public class ShowMeYourFace extends AppCompatActivity {
 //***************************************   Shutter Button Action ****************************************
 
             picSnap.setOnClickListener(event -> {
-                String s3path = AWSMobileClient.getInstance().getUsername()+ "profilePic.png";
+                s3path = AWSMobileClient.getInstance().getUsername()+ "profilePic.png";
                 profilePic = new File(Environment.getExternalStorageDirectory() + "/" + s3path);
 //
-//              Why what is it used for??????? I believe that this runs the camera take pic
+//          New Thread
                 Executor executor = Executors.newSingleThreadExecutor();
-                Log.i(TAG, "onCreate: taking picture?");
+
                 imageCapture.takePicture(profilePic, executor, new ImageCapture.OnImageSavedListener() {
                     @Override
                     public void onError(
@@ -234,7 +235,7 @@ public class ShowMeYourFace extends AppCompatActivity {
     }
 
 //************************************    Upload to S3          **********************************************
-    protected void uploadDataToS3( String profilePicPath, File profilePic){
+    protected void uploadDataToS3( String picName, File profilePic){
         TransferUtility transferUtility =
                 TransferUtility.builder()
                         .context(getApplicationContext())
@@ -242,7 +243,7 @@ public class ShowMeYourFace extends AppCompatActivity {
                         .s3Client(new AmazonS3Client(AWSMobileClient.getInstance()))
                         .build();
         final TransferObserver uploadObserver =
-                transferUtility.upload("public/" + profilePicPath , profilePic);
+                transferUtility.upload("public/" + picName  , profilePic);
 
         // Attach a listener to the observer to get state update and progress notifications
         uploadObserver.setTransferListener(new TransferListener() {
@@ -253,6 +254,8 @@ public class ShowMeYourFace extends AppCompatActivity {
                     upload=false;
                     Log.i(TAG, "onStateChanged: Uploaded Profile Pic");
                     Toast.makeText(getBaseContext(), "Picture Save Complete",Toast.LENGTH_LONG).show();
+                    String bucketPath = uploadObserver.getBucket() +"/" +uploadObserver.getKey();
+                    Log.i(TAG, "onStateChanged: " + bucketPath + "*************************************************************************");
                 }
             }
             @Override
