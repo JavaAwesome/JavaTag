@@ -40,7 +40,7 @@ public class SessionAdapter extends RecyclerView.Adapter<SessionAdapter.SessionV
                     .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            listener.addPlayerToChosenGame(holder.session);
+//                            listener.addPlayerToChosenGame(holder.session);
                             listener.joinExistingGameSession(holder.session);
                             //TODO:  Save the users ID to the database based on the session that they clicked
                         }
@@ -79,6 +79,6 @@ public class SessionAdapter extends RecyclerView.Adapter<SessionAdapter.SessionV
 
     public static interface OnSessionInteractionListener {
         public void joinExistingGameSession(ListSessionsQuery.Item session);
-        public void addPlayerToChosenGame(ListSessionsQuery.Item session);
+//        public void addPlayerToChosenGame(ListSessionsQuery.Item session);
     }
 }

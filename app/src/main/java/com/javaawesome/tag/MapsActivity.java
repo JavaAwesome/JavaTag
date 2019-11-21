@@ -10,6 +10,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.location.Location;
+import android.nfc.Tag;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -20,10 +21,13 @@ import android.widget.Toast;
 import com.amazonaws.amplify.generated.graphql.CreatePlayerMutation;
 import com.amazonaws.amplify.generated.graphql.GetPlayerQuery;
 import com.amazonaws.amplify.generated.graphql.GetSessionQuery;
+import com.amazonaws.amplify.generated.graphql.OnCreatePlayerSubscription;
+import com.amazonaws.amplify.generated.graphql.OnUpdatePlayerSubscription;
 import com.amazonaws.amplify.generated.graphql.UpdatePlayerMutation;
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.config.AWSConfiguration;
 import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient;
+import com.amazonaws.mobileconnectors.appsync.AppSyncSubscriptionCall;
 import com.amazonaws.mobileconnectors.appsync.fetcher.AppSyncResponseFetchers;
 import com.apollographql.apollo.GraphQLCall;
 import com.apollographql.apollo.api.Response;
@@ -44,9 +48,11 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nonnull;
 
@@ -76,6 +82,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     String playerID;
     Player player;
     String sessionId;
+    private AppSyncSubscriptionCall<OnUpdatePlayerSubscription.Data> subscriptionWatcher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,55 +99,71 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // initialize connection with google location services
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
+        mFusedLocationClient.getLastLocation()
+                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        if(location != null){
+                            startingPoint = new LatLng(location.getLatitude(), location.getLongitude());
+                        }
+                    }
+                });
+
         // establish connection to AWS
         awsAppSyncClient = AWSAppSyncClient.builder()
                 .context(getApplicationContext())
                 .awsConfiguration(new AWSConfiguration(getApplicationContext()))
                 .build();
 
-        // get the session that user selected from mainactivity
+        // getting extras
+        playerID = getIntent().getStringExtra("userID");
         sessionId = getIntent().getStringExtra("sessionId");
-        Log.i(TAG, "Session ID for map is: " + sessionId);
+        Log.i(TAG, "Session ID for map is: " + sessionId + "the player Id is " + playerID);
+
         queryForSelectedSession(sessionId);
 
-
         // Pull user ID from MainActivity
-        playerID = getIntent().getStringExtra("userID");
         // If player comes from the recyclerView it will come through as null so we will create a new player
         // Else the player created the game and we will query the player object
-        if (playerID == null) {
+//        if (playerID == null) {
 //            createPlayer();
-        } else {
-            queryForPlayerObject();
-        }
+//        } else {
+//            queryForPlayerObject();
+//        }
 
+        //Stuff doesn't start running until the map is ready in onMapReady(Map stuff)
         mLocationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
+                Log.i(TAG, "Location call back results " + locationResult.toString());
                 if (locationResult == null) {
+                    Log.i(TAG, "location result is null");
                     return;
                 }
-                if(playerID == null) {
-                    createPlayer();
-                }
+
                 sendUserLocationQuery(locationResult);
                 updateMarkerAndCircleForAllPlayers(players);
+
             }
         };
-
-//        mFusedLocationClient.requestLocationUpdates(getLocationRequest(), mLocationCallback, null);
     }
 
+    // ===== Send user info to DynamoDB ====
     private void sendUserLocationQuery(LocationResult locationResult) {
+        Log.i(TAG, "player being sent " + (player == null ? "null" : player.toString()));
         UpdatePlayerInput updatePlayerInput = UpdatePlayerInput.builder()
                 .id(playerID)
                 .playerSessionId(sessionId)
                 .lat(locationResult.getLastLocation().getLatitude())
                 .lon(locationResult.getLastLocation().getLongitude())
-                .isIt(player.isIt())
+                .isIt(player.getIt())
                 .build();
-        UpdatePlayerMutation updatePlayerMutation = UpdatePlayerMutation.builder().input(updatePlayerInput).build();
-        awsAppSyncClient.mutate(updatePlayerMutation).enqueue(new GraphQLCall.Callback<UpdatePlayerMutation.Data>() {
+
+        UpdatePlayerMutation updatePlayerMutation = UpdatePlayerMutation.builder()
+                .input(updatePlayerInput).build();
+
+        awsAppSyncClient.mutate(updatePlayerMutation)
+                .enqueue(new GraphQLCall.Callback<UpdatePlayerMutation.Data>() {
             @Override
             public void onResponse(@Nonnull Response<UpdatePlayerMutation.Data> response) {
                 Log.i(TAG, "update success");
@@ -153,15 +176,59 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
+    // ===== Subscribe to Data real-time ======
+    // https://aws-amplify.github.io/docs/android/api
+
+    private void subscribe() {
+
+            OnUpdatePlayerSubscription subscription = OnUpdatePlayerSubscription.builder().build();
+            subscriptionWatcher = awsAppSyncClient.subscribe(subscription);
+            subscriptionWatcher.execute(subCallback);
+        }
+
+        private AppSyncSubscriptionCall.Callback<OnUpdatePlayerSubscription.Data> subCallback = new AppSyncSubscriptionCall.Callback<OnUpdatePlayerSubscription.Data>() {
+            @Override
+            public void onResponse(@Nonnull Response<OnUpdatePlayerSubscription.Data> response) {
+                Log.i("sharina", "************* !!!! *******" + response.data().toString());
+
+                // Iterate over the players on the map
+                for(Player player : players) {
+                    if(response.data().onUpdatePlayer().id().equals(player.getId())) {
+                        // if true (we have a match) update players lat/long
+                        List<LatLng> bananasList = new LinkedList<>();
+                        bananasList.add(new LatLng(response.data().onUpdatePlayer().lat(),
+                                response.data().onUpdatePlayer().lon()));
+                        player.setLocations(bananasList); // sets location for the player
+                        player.getCircle().setCenter(player.getLastLocation());
+                        player.getMarker().setPosition(player.getLastLocation());
+                    }
+                }
+
+            }
+
+            @Override
+            public void onFailure(@Nonnull ApolloException e) {
+                Log.e("sharina", e.toString());
+            }
+
+        @Override
+        public void onCompleted() {
+            Log.i("sharina", "Subscription completed ");
+        }
+    };
+
+    // =============
+
     @Override
-    protected void onPause() {
-        super.onPause();
+    protected void onStop() {
+        super.onStop();
         stopTrackingLocation();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        subscribe();
     }
 
     /**
@@ -177,13 +244,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
+        Log.i(TAG, "map is ready");
         mMap = googleMap;
 
+        mMap.setMyLocationEnabled(true);
         mMap.setOnMyLocationButtonClickListener(this);
         mMap.setOnMyLocationClickListener(this);
 
-        //TODO: Still need to send the player's location to DB on a timer for updates
         startLocationUpdates();
+    }
+
+    public void stopTrackingLocation() {
+        mFusedLocationClient.removeLocationUpdates(mLocationCallback);
+    }
+
+    // Starts pulling location updates from the DB. 3 second delay to let the aws callbacks load first.
+    private void startLocationUpdates() {
+        try {
+            TimeUnit.SECONDS.sleep(3);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        mFusedLocationClient.requestLocationUpdates(getLocationRequest(), mLocationCallback, Looper.getMainLooper());
+        mMap.setMyLocationEnabled(true);
     }
 
     @Override
@@ -199,21 +282,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     // Called in startLocationUpdates to pull location updates from the DB
     private LocationRequest getLocationRequest() {
+        Log.i(TAG, "getting location request");
         LocationRequest locationRequest = new LocationRequest();
         locationRequest.setInterval(10000);
         locationRequest.setFastestInterval(5000);
         locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
         return locationRequest;
-    }
-
-    public void stopTrackingLocation() {
-        mFusedLocationClient.removeLocationUpdates(mLocationCallback);
-    }
-
-    // Starts pulling location updates from the DB
-    private void startLocationUpdates() {
-        mFusedLocationClient.requestLocationUpdates(getLocationRequest(), mLocationCallback, null);
-        mMap.setMyLocationEnabled(true);
     }
 
     // Creates markers and circles for each player in the list for that session
@@ -254,25 +328,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     private void updateMarkerAndCircleForAllPlayers(List<Player> players) {
+        Log.i(TAG, "updating markers");
+        Log.i(TAG, "How many players? " + players.size());
         List<Player> playersJustGotTagged = new LinkedList<>();
         for (Player player : players) {
             player.getMarker().setPosition(player.getLastLocation());
             player.getCircle().setCenter(player.getLastLocation());
             if (checkForTag(player)) {
-                Log.i("veach", "In the updateMarkerAndCircleForAllPlayers");
+                Log.i(TAG, "In the updateMarkerAndCircleForAllPlayers");
                 playersJustGotTagged.add(player);
                 player.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(itHue));
                 player.getCircle().setStrokeColor(itColor);
-            }
 
-            //TODO: add notifications based on tag changes
-//            if (player.isIt()) {
-//                player.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(itHue));
-//                player.getCircle().setStrokeColor(itColor);
-//            } else {
-//                player.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(notItHue));
-//                player.getCircle().setStrokeColor(notItColor);
-//            }
+                //TODO need to send the new markers to the map. Need to render the changes
+//                mMap.addCircle(player.getCircle());
+            }
         }
 
         itPlayers.addAll(playersJustGotTagged);
@@ -305,26 +375,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         if (distanceBetweenPlayers < tagDistance) {
             player.setIt(true);
-            itPlayer.setIt(false);
-            itPlayer = player;
             return true;
         } else {
             return false;
         }
     }
 
-
     private boolean checkForTag(Player player) {
-        Log.i("veach", "Made it into checkForTag");
+        Log.i(TAG, "Made it into checkForTag");
         if (player.isIt()) {
             return false;
         }
+        if(itPlayers == null){
+            itPlayers = new LinkedList<>();
+            itPlayers.add(players.get(0));
+        }
         for(Player itPlayer : itPlayers) {
-            Log.i("veach", itPlayer.toString());
+            Log.i(TAG, itPlayer.toString());
             if (isTagged(player, itPlayer)) {
 //                Toast.makeText(this, "" + player.getUsername() + " is now it!!!", Toast.LENGTH_SHORT);
                 //TODO: If future views added to app, may need to change "this"?
-                startActivity(new Intent(MapsActivity.this, NotificationActivity.class));
+
+                //TODO: this activity traps the user, so disabled for now.
+//                startActivity(new Intent(MapsActivity.this, NotificationActivity.class));
                 return true;
 
             }
@@ -342,6 +415,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     // Make a Player
     private void createPlayer() {
+        Log.i(TAG, "Making a player with " + sessionId + " " + startingPoint.toString());
         CreatePlayerInput input = CreatePlayerInput.builder()
                 .playerSessionId(sessionId)
                 .lat(startingPoint.latitude)
@@ -392,12 +466,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 });
     }
 
-
     // Callback to get current game session
     private GraphQLCall.Callback<GetSessionQuery.Data> getSessionCallBack = new GraphQLCall.Callback<GetSessionQuery.Data>() {
         @Override
         public void onResponse(@Nonnull final Response<GetSessionQuery.Data> response) {
             currentSession = response.data().getSession();
+            Log.i(TAG, "Current session is "+ currentSession.toString());
+            startingPoint = new LatLng(currentSession.lat(), currentSession.lon());
+            Log.i(TAG, "Starting point is " + startingPoint);
+
+            //once the session ID and starting loc are in place, then make the first player.
+            if (playerID == null) {
+                createPlayer();
+            } else {
+                queryForPlayerObject();
+            }
 
             //converting from GetSessionItems to players
             players = playerConverter(currentSession.players().items());
@@ -405,7 +488,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 @Override
                 public void handleMessage(Message inputMessage){
                     //lat and long for the session
-                    startingPoint = new LatLng(currentSession.lat(), currentSession.lon());
                     initializeMarkersAndCirclesForPlayers(players);
 
                 }
