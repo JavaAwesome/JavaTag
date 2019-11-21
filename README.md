@@ -1,5 +1,10 @@
 # JavaTag: Code 401 Final Project
 
+## APK
+To download and play Zombie Tag click the zombie below  
+
+[![Build Status](https://github.com/JavaAwesome/JavaTag/blob/Dev/app/src/main/res/mipmap-hdpi/ic_launcher_round.png)](https://github.com/JavaAwesome/JavaTag/blob/Dev/output.json)
+
 ## Team Members
 * Ahren Swett
 * James Dansie
@@ -160,5 +165,7 @@ Java 401 Instructional Team
 * Nicholas
 * Jeff
 * Ginger
+
+* Camera icon made by Pixel Buddha from Flaticon www.flaticon.com
 
 ## License

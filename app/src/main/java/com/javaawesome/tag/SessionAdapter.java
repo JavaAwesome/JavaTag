@@ -51,12 +51,12 @@ public class SessionAdapter extends RecyclerView.Adapter<SessionAdapter.SessionV
         return holder;
     };
 
-
     public static class SessionViewHolder extends RecyclerView.ViewHolder {
 
         ListSessionsQuery.Item session;
         TextView sessionTitle;
 //        TextView numberOfPlayers;
+
         public SessionViewHolder(@NonNull View itemView) {
             super(itemView);
             this.sessionTitle = itemView.findViewById(R.id.session_title);
@@ -68,8 +68,8 @@ public class SessionAdapter extends RecyclerView.Adapter<SessionAdapter.SessionV
     public void onBindViewHolder(@NonNull SessionAdapter.SessionViewHolder holder, int position) {
         ListSessionsQuery.Item sessionAtPosition = this.sessions.get(position);
         holder.session = sessionAtPosition;
-        holder.sessionTitle.setText("Title: " + sessionAtPosition.title());
-//        holder.numberOfPlayers.setText("Players: " + sessionAtPosition);
+        holder.sessionTitle.setText(sessionAtPosition.title());
+//        holder.numberOfPlayers.setText("Population: " + sessionAtPosition.players());
     }
 
     @Override
