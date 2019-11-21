@@ -189,7 +189,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         private AppSyncSubscriptionCall.Callback<OnUpdatePlayerSubscription.Data> subCallback = new AppSyncSubscriptionCall.Callback<OnUpdatePlayerSubscription.Data>() {
             @Override
             public void onResponse(@Nonnull Response<OnUpdatePlayerSubscription.Data> response) {
-                Log.i("sharina", "************* !!!! *******" + response.data().toString());
+                Log.i(TAG, "************* !!!! *******" + response.data().toString());
 
                 // Iterate over the players on the map
                 for(Player player : players) {
@@ -208,12 +208,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             @Override
             public void onFailure(@Nonnull ApolloException e) {
-                Log.e("sharina", e.toString());
+                Log.e(TAG, e.toString());
             }
 
         @Override
         public void onCompleted() {
-            Log.i("sharina", "Subscription completed ");
+            Log.i(TAG, "Subscription completed ");
         }
     };
 
