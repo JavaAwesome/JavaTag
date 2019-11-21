@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.nfc.Tag;
 import android.os.Bundle;
@@ -477,13 +478,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                         .radius(tagDistance)
                                         .fillColor(Color.TRANSPARENT)
                                         .strokeWidth(3));
-
                                 // change color of marker depending on if player is it or not
                                 if (player.isIt()) {
-                                    marker.setIcon(BitmapDescriptorFactory.defaultMarker(itHue));
+                                    marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.zombiepin));
                                     circle.setStrokeColor(itColor);
                                 } else {
-                                    marker.setIcon(BitmapDescriptorFactory.defaultMarker(notItHue));
+                                    marker.setIcon(BitmapDescriptorFactory.defaultMarker(R.drawable.player));
                                     circle.setStrokeColor(notItColor);
                                 }
 
