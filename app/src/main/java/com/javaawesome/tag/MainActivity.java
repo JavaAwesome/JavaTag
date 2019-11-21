@@ -6,8 +6,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -18,7 +16,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
@@ -69,16 +66,12 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
         getApplicationContext().startService(new Intent(getApplicationContext(), TransferService.class));
-
-
 
         if (this.checkSelfPermission(ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
                 this.checkSelfPermission(ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION}, 10);
         }
-
 
         // initialize aws mobile client and check if you are logged in or not
         AWSMobileClient.getInstance().initialize(getApplicationContext(), new Callback<UserStateDetails>() {
@@ -120,7 +113,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         super.onResume();
         Log.i(TAG, "onresume called");
         if (checkGpsStatus()) {
-//            getCurrentUserLocation();
+            getCurrentUserLocation();
             checkIfPlayerAlreadyExistInDatabase();
         } else {
             buildAlertMessageNoGps();

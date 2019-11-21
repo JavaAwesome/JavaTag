@@ -28,7 +28,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/InfectionTheme">
-        <activity android:name=".AboutUs"></activity>
         <activity android:name=".NotificationActivity" />
 
         <service android:name="org.eclipse.paho.android.service.MqttService" />

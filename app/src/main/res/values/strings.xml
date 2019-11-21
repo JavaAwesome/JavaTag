@@ -9,4 +9,6 @@
     <string name="session_total_players">Session Total Players</string>
     <string name="welcome">Welcome to Zombie Tag!\nHow long can you survive?\nStart or join a game below.</string>
     <string name="choose_current_game_prompt">Test your survival skills with a current game listed below</string>
+    <string name="number_of_players">Population: </string>
+    <string name="session_name"></string>
 </resources>
