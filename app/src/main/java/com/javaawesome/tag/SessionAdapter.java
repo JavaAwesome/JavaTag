@@ -29,7 +29,7 @@ public class SessionAdapter extends RecyclerView.Adapter<SessionAdapter.SessionV
     @NonNull
     @Override
     public SessionAdapter.SessionViewHolder onCreateViewHolder(@NonNull final ViewGroup parent, int viewType) {
-        final View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_recycler_view_sessions, parent, false);
+        final View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.recyler_view_sessions, parent, false);
         final SessionViewHolder holder = new SessionViewHolder(v);
         v.setOnClickListener(new View.OnClickListener() {
             @Override
