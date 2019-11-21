@@ -458,6 +458,36 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         Log.i(TAG, "made it to making a query for player object");
                         // make a player instance
                         player = new Player(response.data().getPlayer());
+
+                        // Making stuff on the map for the player
+                        Handler markerHandler = new Handler(Looper.getMainLooper()){
+                            @Override
+                            public void handleMessage (Message inputMessage) {
+                                Marker marker = mMap.addMarker(new MarkerOptions()
+                                        .position(player.getLastLocation())
+                                        .title(player.getUsername()));
+                                Circle circle = mMap.addCircle(new CircleOptions()
+                                        .center(player.getLastLocation())
+                                        .radius(tagDistance)
+                                        .fillColor(Color.TRANSPARENT)
+                                        .strokeWidth(3));
+
+                                // change color of marker depending on if player is it or not
+                                if (player.isIt()) {
+                                    marker.setIcon(BitmapDescriptorFactory.defaultMarker(itHue));
+                                    circle.setStrokeColor(itColor);
+                                } else {
+                                    marker.setIcon(BitmapDescriptorFactory.defaultMarker(notItHue));
+                                    circle.setStrokeColor(notItColor);
+                                }
+
+                                player.setCircle(circle);
+                                player.setMarker(marker);
+                                //adding player to the list of players in the game
+                                players.add(player);
+                            }
+                        };
+                        markerHandler.obtainMessage().sendToTarget();
                     }
 
                     @Override
