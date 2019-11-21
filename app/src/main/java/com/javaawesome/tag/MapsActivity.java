@@ -474,7 +474,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                     marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.zombiepin));
                                     circle.setStrokeColor(itColor);
                                 } else {
-                                    marker.setIcon(BitmapDescriptorFactory.defaultMarker(R.drawable.player));
+                                    marker.setIcon(BitmapDescriptorFactory.defaultMarker(R.drawable.playerpin));
                                     circle.setStrokeColor(notItColor);
                                 }
 
