@@ -219,7 +219,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                         .fillColor(Color.TRANSPARENT)
                                         .strokeWidth(3));
 
-                                marker.setIcon(BitmapDescriptorFactory.defaultMarker(notItHue));
+                                marker.setIcon(playerpin);
                                 circle.setStrokeColor(notItColor);
 
                                 Player newPlayer = new Player();
