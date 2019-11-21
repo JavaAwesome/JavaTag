@@ -114,7 +114,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         Log.i(TAG, "onresume called");
         if (checkGpsStatus()) {
 //            getCurrentUserLocation();
-            checkIfPlayerAlreadyExistInLocalDatabase();
+            checkIfPlayerAlreadyExistInDatabase();
         } else {
             buildAlertMessageNoGps();
         }
@@ -283,7 +283,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
     // TODO: Build onDestroy that deletes user data from DB
 
 
-    private void checkIfPlayerAlreadyExistInLocalDatabase() {
+    private void checkIfPlayerAlreadyExistInDatabase() {
         awsAppSyncClient.query(ListPlayersQuery.builder().build())
                 .responseFetcher(AppSyncResponseFetchers.NETWORK_ONLY)
                 .enqueue(new GraphQLCall.Callback<ListPlayersQuery.Data>() {
