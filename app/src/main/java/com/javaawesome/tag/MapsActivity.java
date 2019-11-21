@@ -204,6 +204,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                     bananasList.add(new LatLng(response.data().onUpdatePlayer().lat(),
                                             response.data().onUpdatePlayer().lon()));
                                     player.setLocations(bananasList); // sets location for the player
+                                    player.setIt(updatePlayer.isIt());
                                     contains = true;
                                 }
                             }
