@@ -339,10 +339,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 //                mMap.addCircle(player.getCircle());
             }
         }
-        if(itPlayers == null){
-            itPlayers = new LinkedList<>();
-            itPlayers.add(players.get(0));
-        }
         itPlayers.addAll(playersJustGotTagged);
     }
 
@@ -371,7 +367,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         Log.i(TAG, "distance between players is " + distanceBetweenPlayers + " meters");
 
-        if (distanceBetweenPlayers < tagDistance) {
+//        if (distanceBetweenPlayers < tagDistance) {
+        if (distanceBetweenPlayers < tagDistance && itPlayer != player) {
             player.setIt(true);
             return true;
         } else {
@@ -383,10 +380,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Log.i(TAG, "Made it into checkForTag");
         if (player.isIt()) {
             return false;
-        }
-        if(itPlayers == null){
-            itPlayers = new LinkedList<>();
-            itPlayers.add(players.get(0));
         }
         for(Player itPlayer : itPlayers) {
             Log.i(TAG, itPlayer.toString());
@@ -512,6 +505,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Log.i(TAG, "Made it to the after the if/else within getSessionCallBack");
             //converting from GetSessionItems to players
             players = playerConverter(currentSession.players().items());
+            if(itPlayers == null){
+                itPlayers = new LinkedList<>();
+                for(Player player : players) {
+                    if (player.isIt()) {
+                        itPlayers.add(player);
+                    }
+                }
+                if (itPlayers.isEmpty()) {
+                    itPlayers.add(players.get(0));
+                }
+            }
             Handler h = new Handler(Looper.getMainLooper()){
                 @Override
                 public void handleMessage(Message inputMessage){
