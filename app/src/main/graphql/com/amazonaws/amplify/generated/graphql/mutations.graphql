@@ -10,6 +10,7 @@ mutation CreateSession($input: CreateSessionInput!) {
         isIt
         lat
         lon
+        Photo
       }
       nextToken
     }
@@ -29,6 +30,7 @@ mutation UpdateSession($input: UpdateSessionInput!) {
         isIt
         lat
         lon
+        Photo
       }
       nextToken
     }
@@ -48,6 +50,7 @@ mutation DeleteSession($input: DeleteSessionInput!) {
         isIt
         lat
         lon
+        Photo
       }
       nextToken
     }
@@ -73,6 +76,7 @@ mutation CreatePlayer($input: CreatePlayerInput!) {
     isIt
     lat
     lon
+    Photo
   }
 }
 mutation UpdatePlayer($input: UpdatePlayerInput!) {
@@ -92,6 +96,7 @@ mutation UpdatePlayer($input: UpdatePlayerInput!) {
     isIt
     lat
     lon
+    Photo
   }
 }
 mutation DeletePlayer($input: DeletePlayerInput!) {
@@ -111,5 +116,6 @@ mutation DeletePlayer($input: DeletePlayerInput!) {
     isIt
     lat
     lon
+    Photo
   }
 }
