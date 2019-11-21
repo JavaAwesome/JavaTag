@@ -279,11 +279,11 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
                     @Override
                     public void onResponse(@Nonnull Response<ListPlayersQuery.Data> response) {
                         Log.i(TAG, response.data().listPlayers().items().toString());
-                        Log.i(TAG, "this is playerID " + playerId);
+                        Log.i(TAG, "this is playerId " + playerId);
                         String playerName = AWSMobileClient.getInstance().getUsername();
                         List<ListPlayersQuery.Item> players = response.data().listPlayers().items();
                         for(ListPlayersQuery.Item player : players){
-                            if(playerName.equals(player.username())){
+                            if(player.username().equals(playerName)){
                                 Log.i(TAG, "Username match " + playerName + " " + player.id());
                                 playerId = player.id();
                                 getCurrentUserLocation();
