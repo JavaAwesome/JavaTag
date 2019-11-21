@@ -18,7 +18,7 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
@@ -28,14 +28,13 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".NotificationActivity"></activity>
+        <activity android:name=".UserProfile"></activity>
+        <activity android:name=".NotificationActivity" />
 
         <service android:name="org.eclipse.paho.android.service.MqttService" />
-
         <service
             android:name="com.amazonaws.mobileconnectors.s3.transferutility.TransferService"
-            android:enabled="true">
-        </service>
+            android:enabled="true"></service>
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
              (See the file "res/values/somethingelse.xml").
@@ -44,26 +43,22 @@
              sign the APK for publishing.
              You can define the keys for the debug and release targets in src/debug/ and src/release/.
         -->
-
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value='@string/google_maps_key' />
+            android:value="@string/google_maps_key" />
 
         <activity
             android:name=".MapsActivity"
-            android:label="@string/title_activity_maps">
-        </activity>
-
-        <activity android:name=".picturePreview"/>
-        <activity android:name=".ShowMeYourFace"/>
-
+            android:label="@string/title_activity_maps"></activity>
+        <activity android:name=".picturePreview" />
+        <activity android:name=".ShowMeYourFace" />
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
     </application>
 
 </manifest>

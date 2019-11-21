@@ -42,6 +42,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
@@ -74,10 +75,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private FusedLocationProviderClient mFusedLocationClient;
     final private int tagDistance = 50;
     List<Player> itPlayers;
-    int itColor = Color.RED;
-    int notItColor = Color.GREEN;
-    float itHue = BitmapDescriptorFactory.HUE_RED;
-    float notItHue = BitmapDescriptorFactory.HUE_GREEN;
+    int itColor = Color.GREEN;
+    int notItColor = Color.BLUE;
+    BitmapDescriptor zombiepin;
+    BitmapDescriptor playerpin;
     List<Player> players;
     private final String TAG = "javatag";
     String playerID;
@@ -102,6 +103,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .context(getApplicationContext())
                 .awsConfiguration(new AWSConfiguration(getApplicationContext()))
                 .build();
+
+        zombiepin = BitmapDescriptorFactory.fromResource(R.drawable.zombiepin);
+        playerpin = BitmapDescriptorFactory.fromResource(R.drawable.playerpin);
 
         // getting extras
         playerID = getIntent().getStringExtra("userID");
@@ -300,10 +304,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             // change color of marker depending on if player is it or not
             if (player.isIt()) {
-                marker.setIcon(BitmapDescriptorFactory.defaultMarker(itHue));
+                marker.setIcon(zombiepin);
                 circle.setStrokeColor(itColor);
             } else {
-                marker.setIcon(BitmapDescriptorFactory.defaultMarker(notItHue));
+                marker.setIcon(playerpin);
                 circle.setStrokeColor(notItColor);
             }
 
@@ -333,7 +337,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             if (checkForTag(player)) {
                 Log.i(TAG, "In the updateMarkerAndCircleForAllPlayers");
                 playersJustGotTagged.add(player);
-                player.getMarker().setIcon(BitmapDescriptorFactory.defaultMarker(itHue));
+                player.getMarker().setIcon(zombiepin);
                 player.getCircle().setStrokeColor(itColor);
 
 
@@ -471,10 +475,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                         .strokeWidth(3));
                                 // change color of marker depending on if player is it or not
                                 if (player.isIt()) {
-                                    marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.zombiepin));
+                                    marker.setIcon(zombiepin);
                                     circle.setStrokeColor(itColor);
                                 } else {
-                                    marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.playerpin));
+                                    marker.setIcon(playerpin);
                                     circle.setStrokeColor(notItColor);
                                 }
 
