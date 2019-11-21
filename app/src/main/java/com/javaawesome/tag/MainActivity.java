@@ -1,14 +1,17 @@
 package com.javaawesome.tag;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
@@ -30,12 +33,14 @@ import com.amazonaws.mobile.client.UserStateDetails;
 import com.amazonaws.mobile.config.AWSConfiguration;
 import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient;
 import com.amazonaws.mobileconnectors.appsync.fetcher.AppSyncResponseFetchers;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferService;
 import com.apollographql.apollo.GraphQLCall;
 import com.apollographql.apollo.api.Response;
 import com.apollographql.apollo.exception.ApolloException;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import java.util.LinkedList;
 import java.util.List;
@@ -64,7 +69,16 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        ActivityCompat.requestPermissions(this, new String[]{ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION}, 10);
+
+        getApplicationContext().startService(new Intent(getApplicationContext(), TransferService.class));
+
+
+
+        if (this.checkSelfPermission(ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
+                this.checkSelfPermission(ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION}, 10);
+        }
+
 
         // initialize aws mobile client and check if you are logged in or not
         AWSMobileClient.getInstance().initialize(getApplicationContext(), new Callback<UserStateDetails>() {
@@ -104,10 +118,10 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
     @Override
     protected void onResume() {
         super.onResume();
-
+        Log.i(TAG, "onresume called");
         if (checkGpsStatus()) {
 //            getCurrentUserLocation();
-            checkIfPlayerAlreadyExistInLocalDatabase();
+            checkIfPlayerAlreadyExistInDatabase();
         } else {
             buildAlertMessageNoGps();
         }
@@ -218,6 +232,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
 
     // get all sessions
     private void queryAllSessions() {
+        Log.i(TAG, "query all sessions");
         awsAppSyncClient.query(ListSessionsQuery.builder().build())
                 .responseFetcher(AppSyncResponseFetchers.NETWORK_ONLY)
                 .enqueue(getAllSessionsCallBack);
@@ -227,13 +242,11 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
     private GraphQLCall.Callback<ListSessionsQuery.Data> getAllSessionsCallBack = new GraphQLCall.Callback<ListSessionsQuery.Data>() {
         @Override
         public void onResponse(@Nonnull final Response<ListSessionsQuery.Data> response) {
-            Log.i(TAG, "got sessions data back from dynamodb");
             Handler h = new Handler(Looper.getMainLooper()) {
                 @Override
                 public void handleMessage(Message inputMessage) {
                     sessions.clear();
                     sessions.addAll(response.data().listSessions().items());
-                    Log.i(TAG, sessions.toString());
                     sessionAdapter.notifyDataSetChanged();
                 }
             };
@@ -248,10 +261,11 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
 
     // get current user location
     private void getCurrentUserLocation() {
+        Log.i(TAG, "called getCurrentUserLocation");
         fusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
             @Override
             public void onSuccess(final Location location) {
-                Log.i(TAG, "this is location " + location.toString());
+                Log.i(TAG, "" + location);
                 if (location != null) {
                     new Thread(new Runnable() {
                         @Override
@@ -265,21 +279,24 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
                     }).run();
                 }
             }
+        }).addOnFailureListener(this, new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.e(TAG, e.getMessage());
+            }
         });
     }
 
     // TODO: Build onDestroy that deletes user data from DB
 
 
-    private void checkIfPlayerAlreadyExistInLocalDatabase() {
-        Log.i(TAG, "got in checkIfPLayerExist method");
+    private void checkIfPlayerAlreadyExistInDatabase() {
         awsAppSyncClient.query(ListPlayersQuery.builder().build())
                 .responseFetcher(AppSyncResponseFetchers.NETWORK_ONLY)
                 .enqueue(new GraphQLCall.Callback<ListPlayersQuery.Data>() {
                     @Override
                     public void onResponse(@Nonnull Response<ListPlayersQuery.Data> response) {
-                        Log.i(TAG, response.data().listPlayers().items().toString());
-                        Log.i(TAG, "this is playerId " + playerId);
+                        Log.i(TAG, "this is playerID " + playerId);
                         String playerName = AWSMobileClient.getInstance().getUsername();
                         List<ListPlayersQuery.Item> players = response.data().listPlayers().items();
                         for(ListPlayersQuery.Item player : players){
@@ -312,6 +329,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         awsAppSyncClient.mutate(createPlayerMutation).enqueue(new GraphQLCall.Callback<CreatePlayerMutation.Data>() {
             @Override
             public void onResponse(@Nonnull Response<CreatePlayerMutation.Data> response) {
+                Log.i(TAG, "created a player");
                 playerId = response.data().createPlayer().id();
             }
 
