@@ -10,6 +10,7 @@ query GetSession($id: ID!) {
         isIt
         lat
         lon
+        Photo
       }
       nextToken
     }
@@ -54,6 +55,7 @@ query GetPlayer($id: ID!) {
     isIt
     lat
     lon
+    Photo
   }
 }
 query ListPlayers(
@@ -75,6 +77,7 @@ query ListPlayers(
       isIt
       lat
       lon
+      Photo
     }
     nextToken
   }
