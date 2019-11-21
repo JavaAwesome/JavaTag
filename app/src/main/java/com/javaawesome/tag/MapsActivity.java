@@ -97,16 +97,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // initialize connection with google location services
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        mFusedLocationClient.getLastLocation()
-                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        if(location != null){
-                            startingPoint = new LatLng(location.getLatitude(), location.getLongitude());
-                        }
-                    }
-                });
-
         // establish connection to AWS
         awsAppSyncClient = AWSAppSyncClient.builder()
                 .context(getApplicationContext())
@@ -200,8 +190,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 bananasList.add(new LatLng(response.data().onUpdatePlayer().lat(),
                                         response.data().onUpdatePlayer().lon()));
                                 player.setLocations(bananasList); // sets location for the player
-                                player.getCircle().setCenter(player.getLastLocation());
-                                player.getMarker().setPosition(player.getLastLocation());
+                                //Might have been causing the starting point to move
+//                                player.getCircle().setCenter(player.getLastLocation());
+//                                player.getMarker().setPosition(player.getLastLocation());
                             }
                         }
                     }
