@@ -41,7 +41,8 @@
         app:layout_constraintBottom_toTopOf="@+id/goToMapButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/signoutButton" />
+        app:layout_constraintTop_toBottomOf="@+id/signoutButton"
+        app:layout_constraintVertical_bias="0.709" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_nearby_sessions"
@@ -64,7 +65,7 @@
         android:onClick="onTestyClick"
         android:text="TEST"
         app:layout_constraintEnd_toStartOf="@+id/signoutButton"
-        app:layout_constraintHorizontal_bias="0.42"
+        app:layout_constraintHorizontal_bias="0.146"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -72,7 +73,7 @@
         android:id="@+id/camera"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="48dp"
+        android:layout_marginTop="80dp"
         android:onClick="goToCameraClass"
         android:text="Go To Camera"
         app:layout_constraintEnd_toStartOf="@+id/signoutButton"

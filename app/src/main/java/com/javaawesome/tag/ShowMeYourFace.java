@@ -13,6 +13,8 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Environment;
 import android.Manifest;
 import android.content.Intent;
@@ -22,32 +24,72 @@ import android.util.Log;
 import android.util.Size;
 import android.view.TextureView;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.amazonaws.mobile.client.AWSMobileClient;
+import com.amazonaws.mobile.config.AWSConfiguration;
+import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
+import com.amazonaws.services.s3.AmazonS3Client;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.File;
 import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 
 public class ShowMeYourFace extends AppCompatActivity {
     private static final String TAG = "ahren:javatag";
+    private static boolean upload = false;
     private ImageCapture imageCapture;
     final CameraX.LensFacing camera = CameraX.LensFacing.FRONT;
+    String profPicPath = null;
+    AWSAppSyncClient mAWSAppSyncClient;
+    File profilePic = null;
 
+    public static boolean isUpload() {
+        return upload;
+    }
 
+    public static void setUpload(boolean upload) {
+        ShowMeYourFace.upload = upload;
+    }
+
+    public void goToPicturePreview(String  profilePicPath){
+        Intent goToPicturePreview = new Intent(this, picturePreview.class);
+        this.startActivity(goToPicturePreview.putExtra("picpath",profilePicPath));
+    }
+
+    protected void onResume() {
+        super.onResume();
+        if(upload && profPicPath != null && profilePic != null){
+            uploadDataToS3(profPicPath,profilePic);
+            finish();
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_me_your_face);
 
+        mAWSAppSyncClient = AWSAppSyncClient.builder()
+                .context(getApplicationContext())
+                .awsConfiguration(new AWSConfiguration(getApplicationContext()))
+                .build();
+
+//*************  Check If app has camera permissions ************************
         Log.i(TAG, "onCreate: Hello World");
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED){
             if(ActivityCompat.shouldShowRequestPermissionRationale(this,
                     Manifest.permission.CAMERA)) {
+                Log.i(TAG, "onCreate: permission not granted");
                 // Show an explanation to the user *asynchronously* -- don't block
                 // this thread waiting for the user's response! After the user
                 // sees the explanation, try again to request the permission.
@@ -58,15 +100,42 @@ public class ShowMeYourFace extends AppCompatActivity {
                         1);
             }
         }else {
-            FloatingActionButton picSnap = findViewById(R.id.picSnap);
-//            FloatingActionButton switchCamera = findViewById(R.id.fab_switch_camera);
-//            FloatingActionButton fab_flash = findViewById(R.id.fab_flash);
 
+//************************************ Setup Buttons **********************************************
+            FloatingActionButton picSnap = findViewById(R.id.picSnap);
+//          FloatingActionButton switchCamera = findViewById(R.id.fab_switch_camera);
+//          FloatingActionButton fab_flash = findViewById(R.id.fab_flash);
+
+// **********************************   Setup Camera   **********************************************
             bindCamera();
 
-
-
 //***************************************   Shutter Button Action ****************************************
+
+            picSnap.setOnClickListener(event -> {
+                profilePic = new File(Environment.getExternalStorageDirectory() + "/" + AWSMobileClient.getInstance().getUsername()+ "profilePic.png");
+//
+//              Why what is it used for??????? I believe that this runs the camera take pic
+                Executor executor = Executors.newSingleThreadExecutor();
+                Log.i(TAG, "onCreate: taking picture?");
+                imageCapture.takePicture(profilePic, executor, new ImageCapture.OnImageSavedListener() {
+                    @Override
+                    public void onError(
+                            @NonNull ImageCapture.ImageCaptureError imageCaptureError, @NonNull String message, Throwable cause) {
+//                                       TODO: insert your code here.
+                    }
+
+                    @Override
+                    public void onImageSaved(@NonNull File file) {
+                        profPicPath = file.getAbsolutePath();
+                        Log.v(TAG, "onImageSaved: Saved");
+                        String msg = "file saved at " + file.getAbsolutePath();
+                        Log.i(TAG, "onImageSaved: "+msg);
+                        goToPicturePreview(file.getAbsolutePath());
+
+                    }
+                });
+
+            });
 
 
 //                @Override
@@ -84,36 +153,13 @@ public class ShowMeYourFace extends AppCompatActivity {
 //                        }
 //                    });
 //                }
-
-            picSnap.setOnClickListener(event -> {
-                Log.i(TAG, "onCreate: taking picture?");
-                File file = new File(Environment.getExternalStorageDirectory() + "/" + System.currentTimeMillis() + ".png");
-                String msg = "file will be saved at " + file.getAbsolutePath();
-                Toast.makeText(getBaseContext(), msg,Toast.LENGTH_LONG).show();
-//
-//              Why what is it used for???????
-                Executor executor = runnable -> {
-                };
-
-                imageCapture.takePicture(file, executor,
-                        new ImageCapture.OnImageSavedListener() {
-                            @Override
-                            public void onImageSaved(@NonNull File file) {
-                                Log.i(TAG, "onImageSaved: INside Image Saved");
-                                String msg = "Pic captured at " + file.getAbsolutePath();
-                                Toast.makeText(getBaseContext(), msg,Toast.LENGTH_LONG).show();
-                            }
-
-                            @Override
-                            public void onError(
-                                    ImageCapture.ImageCaptureError imageCaptureError, String message, Throwable cause) {
-//                                       TODO: insert your code here.
-                            }
-                        });
-            });
+//            ImageCaptureConfig imageCaptureConfig = new ImageCaptureConfig.Builder().setCaptureMode(ImageCapture.CaptureMode.MIN_LATENCY)
+//                    .setTargetRotation(getWindowManager().getDefaultDisplay().getRotation()).build();
+//            final ImageCapture imgCap = new ImageCapture(imageCaptureConfig);
 
 
-//*************************Setting up the image capture config*************************
+
+
 
 
 
@@ -148,7 +194,9 @@ public class ShowMeYourFace extends AppCompatActivity {
         }
     }
 
-    private void bindCamera() {
+
+//    ******************************* Method that sets up camera and preview settings ***************************************
+    private void bindCamera(){
         CameraX.unbindAll();
 
         final TextureView textureView = findViewById(R.id.view_finder);
@@ -165,7 +213,7 @@ public class ShowMeYourFace extends AppCompatActivity {
 //      Set the display view for the camera preview
         preview.setOnPreviewOutputUpdateListener(new Preview.OnPreviewOutputUpdateListener() {
             @Override
-            public void onUpdated(Preview.PreviewOutput previewOutput) {
+            public void onUpdated(@NonNull Preview.PreviewOutput previewOutput) {
                 // Your code here. For example, use
                 textureView.setSurfaceTexture(previewOutput.getSurfaceTexture());
             }
@@ -182,6 +230,43 @@ public class ShowMeYourFace extends AppCompatActivity {
 
 //      Causes camera u=instance to only exist on this activity is started and destroyed on start and finish
         CameraX.bindToLifecycle(this, imageCapture, preview);
+    }
+
+//************************************    Upload to S3          **********************************************
+    protected void uploadDataToS3( String profilePicPath, File profilePic){
+        TransferUtility transferUtility =
+                TransferUtility.builder()
+                        .context(getApplicationContext())
+                        .awsConfiguration(AWSMobileClient.getInstance().getConfiguration())
+                        .s3Client(new AmazonS3Client(AWSMobileClient.getInstance()))
+                        .build();
+        final TransferObserver uploadObserver =
+                transferUtility.upload("public/" + profilePicPath , profilePic);
+
+        // Attach a listener to the observer to get state update and progress notifications
+        uploadObserver.setTransferListener(new TransferListener() {
+
+            @Override
+            public void onStateChanged(int id, TransferState state) {
+                if (TransferState.COMPLETED == state) {
+                    upload=false;
+                    Log.i(TAG, "onStateChanged: Uploaded Profile Pic");
+                    Toast.makeText(getBaseContext(), "Picture Save Complete",Toast.LENGTH_LONG).show();
+                }
+            }
+            @Override
+            public void onProgressChanged(int id, long bytesCurrent, long bytesTotal) {
+                float percentDonef = ((float) bytesCurrent / (float) bytesTotal) * 100;
+                int percentDone = (int) percentDonef;
+                Log.d(TAG, "ID:" + id + " bytesCurrent: " + bytesCurrent
+                        + " bytesTotal: " + bytesTotal + " " + percentDone + "%");
+            }
+
+            @Override
+            public void onError(int id, Exception ex) {
+                // Handle errors
+            }
+        });
     }
 
 }
