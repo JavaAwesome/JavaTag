@@ -184,7 +184,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
     public void joinExistingGameSession(ListSessionsQuery.Item session) {
         Intent goToMapIntent = new Intent(this, MapsActivity.class);
         goToMapIntent.putExtra("sessionId", session.id());
-        goToMapIntent.putExtra("userId", playerId);
+        goToMapIntent.putExtra("userID", playerId);
         this.startActivity(goToMapIntent);
     }
 
