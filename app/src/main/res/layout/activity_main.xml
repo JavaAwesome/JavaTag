@@ -38,7 +38,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="24dp"
         android:onClick="goToMap"
-        android:text="Start New Game"
+        android:text="@string/start_new_game_button"
         app:layout_constraintBottom_toTopOf="@+id/recycler_nearby_sessions"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
