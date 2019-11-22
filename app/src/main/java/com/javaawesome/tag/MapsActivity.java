@@ -401,13 +401,35 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             if (checkForTag(player)) {
                 Log.i(TAG, "In the updateMarkerAndCircleForAllPlayers");
                 playersJustGotTagged.add(player);
-                player.getMarker().setIcon(zombiepin);
-                player.getCircle().setStrokeColor(itColor);
 
+//                player.getMarker().setIcon(zombiepin);
+//                player.getCircle().setStrokeColor(itColor);
 
 //                mMap.addCircle(player.getCircle());
             }
+//            else {
+//                player.getMarker().setIcon(playerpin);
+//                player.getCircle().setStrokeColor(notItColor);
+//            }
         }
+        //TODO add the player instance is it update, only updates the player list so far
+        for(Player player : players){
+            if(player.getIt()){
+                player.getMarker().setIcon(zombiepin);
+                player.getCircle().setStrokeColor(itColor);
+            } else {
+                player.getMarker().setIcon(playerpin);
+                player.getCircle().setStrokeColor(notItColor);
+            }
+        }
+
+        for(Player p : players){
+            if(p.getId().equals(playerID)){
+                Log.i(TAG, "Player Ids match");
+                player.setIt(p.getIt());
+            }
+        }
+
         itPlayers.addAll(playersJustGotTagged);
     }
 
@@ -438,6 +460,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 //        if (distanceBetweenPlayers < tagDistance) {
         if (distanceBetweenPlayers < tagDistance && itPlayer != player) {
+            Log.i(TAG, "*************player is set to true*************");
             player.setIt(true);
             return true;
         } else {
