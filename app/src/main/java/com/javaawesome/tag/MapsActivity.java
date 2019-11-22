@@ -685,5 +685,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     };
 
     // TODO: Build onDestroy that deletes user data from DB
+//    @Override
+//    protected void onDestroy() {
+//        super.onDestroy();
+//    }
 
 }
