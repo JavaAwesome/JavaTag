@@ -57,12 +57,16 @@ public class ShowMeYourFace extends AppCompatActivity {
     private static boolean upload = false;
     private ImageCapture imageCapture;
     final CameraX.LensFacing camera = CameraX.LensFacing.FRONT;
+
+//    set to absolute path eventualy
     String profPicPath = null;
+//
     String s3path = null;
     String userPhoto;
     AWSAppSyncClient mAWSAppSyncClient;
+// created by picSnap
     File profilePic = null;
-    String bucketPath;
+
 
     public static boolean isUpload() {
         return upload;
@@ -80,18 +84,8 @@ public class ShowMeYourFace extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         if(upload && profPicPath != null && profilePic != null){
-
-            UpdatePlayerInput updatePlayerInput = UpdatePlayerInput.builder()
-                    .id(getIntent().getStringExtra("playerId"))
-                    .photo(bucketPath)
-                    .build();
-
-            UpdatePlayerMutation updatePlayerMutation = UpdatePlayerMutation.builder()
-                    .input(updatePlayerInput).build();
-
             uploadDataToS3(s3path, profilePic);
 //            update photo in Dynamo
-
             finish();
         }
     }
@@ -120,14 +114,14 @@ public class ShowMeYourFace extends AppCompatActivity {
             } else {
                 // No explanation needed; request the permission
                 ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.CAMERA},
+                        new String[]{Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE},
                         1);
             }
         }else {
 
 //************************************ Setup Buttons **********************************************
             FloatingActionButton picSnap = findViewById(R.id.picSnap);
-//          FloatingActionButton switchCamera = findViewById(R.id.fab_switch_camera);
+//          FloatingActionButton switchCamera = findViewById(R.id.fab_switch_camera);,
 //          FloatingActionButton fab_flash = findViewById(R.id.fab_flash);
 
 // **********************************   Setup Camera   **********************************************
@@ -136,6 +130,7 @@ public class ShowMeYourFace extends AppCompatActivity {
 //***************************************   Shutter Button Action ****************************************
 
             picSnap.setOnClickListener(event -> {
+//                put picture localy in the phone
                 s3path = AWSMobileClient.getInstance().getUsername()+ "profilePic.png";
                 profilePic = new File(Environment.getExternalStorageDirectory() + "/" + s3path);
 //
@@ -277,9 +272,9 @@ public class ShowMeYourFace extends AppCompatActivity {
                     upload=false;
                     Log.i(TAG, "onStateChanged: Uploaded Profile Pic");
                     Toast.makeText(getBaseContext(), "Picture Save Complete",Toast.LENGTH_LONG).show();
-                    bucketPath ="https://" + uploadObserver.getBucket() + ".s3-us-west-2.amazonaws.com/" +uploadObserver.getKey();
-                    Log.i(TAG, "onStateChanged: " + bucketPath + "*************************************************************************");
-
+                    String imgUrl = MainActivity.photoBucketPath + uploadObserver.getKey();
+                    Log.i(TAG, "onStateChanged: " + imgUrl + "*************************************************************************");
+                    updatePlayerInput(imgUrl);
                 }
             }
             @Override
@@ -293,6 +288,31 @@ public class ShowMeYourFace extends AppCompatActivity {
             @Override
             public void onError(int id, Exception ex) {
                 // Handle errors
+            }
+        });
+    }
+
+
+    private void updatePlayerInput(String imgURL){
+        Log.i(TAG, "created a player"+ getIntent().getStringExtra("playerId"));
+        UpdatePlayerInput updatePlayerInput = UpdatePlayerInput.builder()
+                .id(getIntent().getStringExtra("playerId"))
+                .photo(imgURL)
+                .build();
+
+        UpdatePlayerMutation updatePlayerMutation = UpdatePlayerMutation.builder()
+                .input(updatePlayerInput).build();
+                mAWSAppSyncClient.mutate(updatePlayerMutation)
+                .enqueue(new GraphQLCall.Callback<UpdatePlayerMutation.Data>() {
+            @Override
+            public void onResponse(@Nonnull Response<UpdatePlayerMutation.Data> response) {
+                Log.i(TAG, "update success");
+
+            }
+
+            @Override
+            public void onFailure(@Nonnull ApolloException e) {
+                Log.e(TAG, "update not successful");
             }
         });
     }

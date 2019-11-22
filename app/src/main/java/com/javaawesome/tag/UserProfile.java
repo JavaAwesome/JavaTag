@@ -4,6 +4,9 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
@@ -25,7 +28,7 @@ public class UserProfile extends AppCompatActivity {
     AWSAppSyncClient awsAppSyncClient;
     String userPhoto;
     String TAG = "ahren:UserProfile";
-
+    ImageView profPic;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,17 +42,20 @@ public class UserProfile extends AppCompatActivity {
 
         queryForPlayerObject(getIntent().getStringExtra("playerId"));
 
-        ImageView profPic = findViewById(R.id.profilePicture);
-        Picasso.get().load(userPhoto).into(profPic);
+
+        profPic = findViewById(R.id.profilePicture);
+        Log.i(TAG, "onCreate: "+userPhoto);
 
 
-        TextView username = findViewById(R.id.username);
+
+
+        TextView username = findViewById(R.id.UserName);
         username.setText(AWSMobileClient.getInstance().getUsername());
     }
     ///////////// Turn on Camera ///////////////////
     public void goToCameraClass(View view){
         Intent goToCamera = new Intent(this, ShowMeYourFace.class);
-        this.startActivity(goToCamera.putExtra("playerID",getIntent().getStringExtra("playerId")));
+        this.startActivity(goToCamera.putExtra("playerId",getIntent().getStringExtra("playerId")));
     }
     private void queryForPlayerObject(String playerId) {
         GetPlayerQuery query = GetPlayerQuery.builder().id(playerId).build();
@@ -60,6 +66,16 @@ public class UserProfile extends AppCompatActivity {
                     public void onResponse(@Nonnull Response<GetPlayerQuery.Data> response) {
                         Log.i(TAG, "made it to making a query for player object");
                         userPhoto = response.data().getPlayer().Photo();
+
+                        Handler h = new Handler(Looper.getMainLooper()){
+                            @Override
+                            public void handleMessage (Message inputMessage) {
+                                Log.i(TAG, "handleMessage: getting photo***********************************************************************");
+                                Picasso.get().load(userPhoto).into(profPic);
+                                Log.i(TAG, "handleMessage: "+userPhoto);
+                            }
+                        };
+                        h.obtainMessage().sendToTarget();
                     }
 
                     @Override
