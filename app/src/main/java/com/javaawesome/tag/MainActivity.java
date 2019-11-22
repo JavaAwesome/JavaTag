@@ -159,6 +159,12 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         }
     }
 
+    ///////////// Go to user page ///////////////////
+    public void goToUserPage(View view){
+        Intent goToUserPage = new Intent(this, UserProfile.class);
+        this.startActivity(goToUserPage.putExtra("playerId",playerId));
+    }
+
     //////// TEST BUTTON /////
     public void onTestyClick(View view) {
         startActivity(new Intent(MainActivity.this, NotificationActivity.class));
@@ -169,11 +175,6 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         Intent goToCamera = new Intent(this, ShowMeYourFace.class);
         this.startActivity(goToCamera);
     }
-    ///////////// Turn on Camera ///////////////////
-    public void goToProfile(View view){
-        Intent goToProfile = new Intent(this, UserProfile.class);
-        this.startActivity(goToProfile.putExtra("playerId",playerId));
-    }
 
     /////////////
 
@@ -181,7 +182,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
     private void signInUser() {
         AWSMobileClient.getInstance().showSignIn(MainActivity.this,
                 // customize the built in sign in page
-                SignInUIOptions.builder().backgroundColor(16763080).build(),
+                SignInUIOptions.builder().backgroundColor(16763080).logo(R.drawable.zombieicon).build(),
                 new Callback<UserStateDetails>() {
                     @Override
                     public void onResult(UserStateDetails result) {
