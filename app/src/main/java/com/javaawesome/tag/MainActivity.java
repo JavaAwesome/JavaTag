@@ -177,7 +177,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
     private void signInUser() {
         AWSMobileClient.getInstance().showSignIn(MainActivity.this,
                 // customize the built in sign in page
-                SignInUIOptions.builder().backgroundColor(16763080).logo(R.drawable.zombieicon).build(),
+                SignInUIOptions.builder().backgroundColor(16763080).logo(R.mipmap.ic_launcher_round).build(),
                 new Callback<UserStateDetails>() {
                     @Override
                     public void onResult(UserStateDetails result) {

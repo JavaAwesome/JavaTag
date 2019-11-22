@@ -38,10 +38,9 @@
         android:id="@+id/goToMapButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="24dp"
+        android:layout_marginTop="24dp"
         android:onClick="goToMap"
         android:text="@string/start_new_game_button"
-        app:layout_constraintBottom_toTopOf="@+id/recycler_nearby_sessions"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/editText_session_name" />
@@ -63,11 +62,10 @@
         android:id="@+id/recyclerChooseCurrentGamePrompt"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
+        android:layout_marginTop="16dp"
         android:gravity="center"
         android:text="@string/choose_current_game_prompt"
         android:textSize="18sp"
-        app:layout_constraintBottom_toTopOf="@+id/recycler_nearby_sessions"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/goToMapButton" />
@@ -75,15 +73,16 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_nearby_sessions"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
         android:layout_marginBottom="16dp"
-        android:elevation="12dp"
         android:clipToPadding="false"
+        android:elevation="12dp"
         app:layout_constraintBottom_toTopOf="@+id/userPageButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/goToMapButton" />
+        app:layout_constraintTop_toBottomOf="@id/recyclerChooseCurrentGamePrompt" />
 
     <Button
         android:id="@+id/userPageButton"
