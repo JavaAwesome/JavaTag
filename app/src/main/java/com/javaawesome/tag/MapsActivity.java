@@ -305,6 +305,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 //        startLocationUpdates();
     }
 
+    public void onDestroy() {
+        super.onDestroy();
+        Log.i(TAG, "Our session was destroyed... trying to set player to false");
+        UpdatePlayerInput updatePlayerInput = UpdatePlayerInput.builder()
+                .id(playerID)
+                .playerSessionId(null)
+                .isIt(false)
+                .build();
+        UpdatePlayerMutation updatePlayerMutation = UpdatePlayerMutation.builder()
+                .input(updatePlayerInput).build();
+        awsAppSyncClient.mutate(updatePlayerMutation)
+                .enqueue(new GraphQLCall.Callback<UpdatePlayerMutation.Data>() {
+                    @Override
+                    public void onResponse(@Nonnull Response<UpdatePlayerMutation.Data> response) {
+                        Log.i(TAG, "onDestroy successful");
+                    }
+                    @Override
+                    public void onFailure(@Nonnull ApolloException e) {
+                        Log.e(TAG, "onDestroy not successful");
+                    }
+                });
+    }
+
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
