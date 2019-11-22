@@ -112,7 +112,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         sessionId = getIntent().getStringExtra("sessionId");
         Log.i(TAG, "Session ID for map is: " + sessionId + "the player Id is " + playerID);
 
-        queryForSelectedSession(sessionId);
+        associateUserWithSession();
 
         // Pull user ID from MainActivity
         // If player comes from the recyclerView it will come through as null so we will create a new player
@@ -166,6 +166,31 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Log.e(TAG, "update not successful");
             }
         });
+    }
+
+    private void associateUserWithSession() {
+        Log.i(TAG, "player being sent " + (player == null ? "null" : player.toString()));
+        UpdatePlayerInput updatePlayerInput = UpdatePlayerInput.builder()
+                .id(playerID)
+                .playerSessionId(sessionId)
+                .build();
+
+        UpdatePlayerMutation updatePlayerMutation = UpdatePlayerMutation.builder()
+                .input(updatePlayerInput).build();
+
+        awsAppSyncClient.mutate(updatePlayerMutation)
+                .enqueue(new GraphQLCall.Callback<UpdatePlayerMutation.Data>() {
+                    @Override
+                    public void onResponse(@Nonnull Response<UpdatePlayerMutation.Data> response) {
+                        Log.i(TAG, "update success");
+                        queryForSelectedSession(sessionId);
+                    }
+
+                    @Override
+                    public void onFailure(@Nonnull ApolloException e) {
+                        Log.e(TAG, "update not successful");
+                    }
+                });
     }
 
     // ===== Subscribe to Data real-time ======
@@ -391,6 +416,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             if (itPlayers.isEmpty()) {
                 itPlayers.add(players.get(0));
+                players.get(0).setIt(true);
             }
         }
 
