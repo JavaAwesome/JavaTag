@@ -65,22 +65,19 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
     LatLng currentUserLocation;
     LocationManager locationManager;
     AlertDialog alert;
+    private final int distanceForNearbySessions = 1000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
         getApplicationContext().startService(new Intent(getApplicationContext(), TransferService.class));
-
-
 
         if (this.checkSelfPermission(ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
                 this.checkSelfPermission(ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION}, 10);
         }
-
 
         // initialize aws mobile client and check if you are logged in or not
         AWSMobileClient.getInstance().initialize(getApplicationContext(), new Callback<UserStateDetails>() {
@@ -127,7 +124,6 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         } else {
             buildAlertMessageNoGps();
         }
-        queryAllSessions();
     }
 
     // Create new game session and go to map page
@@ -163,24 +159,22 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         }
     }
 
+    ///////////// Go to user page ///////////////////
+    public void goToUserPage(View view){
+        Intent goToUserPage = new Intent(this, UserProfile.class);
+        this.startActivity(goToUserPage);
+    }
+
     //////// TEST BUTTON /////
     public void onTestyClick(View view) {
         startActivity(new Intent(MainActivity.this, NotificationActivity.class));
     }
 
-    ///////////// Turn on Camera ///////////////////
-    public void goToCameraClass(View view){
-        Intent goToCamera = new Intent(this, ShowMeYourFace.class);
-        this.startActivity(goToCamera);
-    }
-
-    /////////////
-
     // Direct users to sign in page
     private void signInUser() {
         AWSMobileClient.getInstance().showSignIn(MainActivity.this,
                 // customize the built in sign in page
-                SignInUIOptions.builder().backgroundColor(16763080).build(),
+                SignInUIOptions.builder().backgroundColor(16763080).logo(R.drawable.zombieicon).build(),
                 new Callback<UserStateDetails>() {
                     @Override
                     public void onResult(UserStateDetails result) {
@@ -253,7 +247,8 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
                 @Override
                 public void handleMessage(Message inputMessage) {
                     sessions.clear();
-                    sessions.addAll(response.data().listSessions().items());
+                    List<ListSessionsQuery.Item> filteredSessions = filterSessionsBasedOnDistance(response.data().listSessions().items());
+                    sessions.addAll(filteredSessions);
                     sessionAdapter.notifyDataSetChanged();
                 }
             };
@@ -278,6 +273,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
                         @Override
                         public void run() {
                             currentUserLocation = new LatLng(location.getLatitude(), location.getLongitude());
+                            queryAllSessions();
                             Log.i(TAG, "playerId in getcurrentUserlocation " + playerId);
                             if (playerId == null) {
                                 createPlayer();
@@ -347,6 +343,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         });
     }
 
+    // Checks if Gps Location is turned on or not on the user's phone
     private boolean checkGpsStatus() {
         locationManager = (LocationManager)getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
@@ -368,5 +365,20 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
                 });
         alert = builder.create();
         alert.show();
+    }
+
+    // filter out list of sessions to a smaller list that consist of sessions nearby the player's location
+    private List<ListSessionsQuery.Item> filterSessionsBasedOnDistance(List<ListSessionsQuery.Item> allSessions) {
+        List<ListSessionsQuery.Item> filteredSessions = new LinkedList<>();
+        for (ListSessionsQuery.Item session : allSessions) {
+            double distanceBetweenSessionAndPlayer = Utility.distanceBetweenLatLongPoints(currentUserLocation.latitude,
+                    currentUserLocation.longitude,
+                    session.lat(),
+                    session.lon());
+            if (distanceBetweenSessionAndPlayer < distanceForNearbySessions) {
+                filteredSessions.add(session);
+            }
+        }
+        return filteredSessions;
     }
 }

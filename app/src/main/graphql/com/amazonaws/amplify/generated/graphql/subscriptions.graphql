@@ -10,6 +10,7 @@ subscription OnCreateSession {
         isIt
         lat
         lon
+        Photo
       }
       nextToken
     }
@@ -29,6 +30,7 @@ subscription OnUpdateSession {
         isIt
         lat
         lon
+        Photo
       }
       nextToken
     }
@@ -48,6 +50,7 @@ subscription OnDeleteSession {
         isIt
         lat
         lon
+        Photo
       }
       nextToken
     }
@@ -73,6 +76,7 @@ subscription OnCreatePlayer {
     isIt
     lat
     lon
+    Photo
   }
 }
 subscription OnUpdatePlayer {
@@ -92,6 +96,7 @@ subscription OnUpdatePlayer {
     isIt
     lat
     lon
+    Photo
   }
 }
 subscription OnDeletePlayer {
@@ -111,5 +116,6 @@ subscription OnDeletePlayer {
     isIt
     lat
     lon
+    Photo
   }
 }

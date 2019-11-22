@@ -5,6 +5,9 @@
 *.apk
 *.ap_
 
+# Allow launched apk
+!/zombietag.apk
+
 # Files for the ART/Dalvik VM
 *.dex
 
