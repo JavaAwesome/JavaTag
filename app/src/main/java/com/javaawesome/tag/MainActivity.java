@@ -129,7 +129,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         }
     }
 
-    //Create a new game session and go to map page
+    //Create a new game session and transfer the player to the games' map page
     public void goToMap(View view) {
         // TODO: check if player already exist in the database
         EditText sessionName = findViewById(R.id.editText_session_name);
@@ -154,29 +154,31 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
 
                 @Override
                 public void onFailure(@Nonnull ApolloException e) {
-                    Log.e(TAG, "error in creating new game session" + e.getMessage());
+                    Log.e(TAG, "Error in creating new game session" + e.getMessage());
                 }
             });
+
+        //Send prompt to player that a session name is required before creating the new game
         }else{
             Toast.makeText(getBaseContext(), "Please enter a session title.",Toast.LENGTH_LONG).show();
         }
     }
 
-    ///////////// Go to user page ///////////////////
+    //Go to user page when the zombie icon is clicked
     public void goToUserPage(View view){
         Intent goToUserPage = new Intent(this, UserProfile.class);
         this.startActivity(goToUserPage);
     }
 
-    // Direct users to sign in page
+    //Show the signin page if the player is not signed in when they open the app
     private void signInUser() {
         AWSMobileClient.getInstance().showSignIn(MainActivity.this,
-                // customize the built in sign in page
+                //Customize the built-in signin page with the defined theme color and icon
                 SignInUIOptions.builder().backgroundColor(16763080).logo(R.mipmap.ic_launcher_round).build(),
                 new Callback<UserStateDetails>() {
                     @Override
                     public void onResult(UserStateDetails result) {
-                        Log.i(TAG, "successfully show signed in page");
+                        Log.i(TAG, "Successfully show signed in page");
                     }
 
                     @Override
@@ -186,13 +188,13 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
                 });
     }
 
-    // sign out user and show them sign in page
+    //Sign out the player and show them the signin page
     public void signoutCurrentUser(View view) {
         AWSMobileClient.getInstance().signOut();
         signInUser();
     }
 
-    // onclick method for button to join existing game sessions
+    //onclick method for player to join an existing game session
     @Override
     public void joinExistingGameSession(ListSessionsQuery.Item session) {
         Intent goToMapIntent = new Intent(this, MapsActivity.class);
@@ -201,7 +203,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         this.startActivity(goToMapIntent);
     }
 
-    // get all sessions
+    //Get all sessions from the database
     private void queryAllSessions() {
         Log.i(TAG, "query all sessions");
         awsAppSyncClient.query(ListSessionsQuery.builder().build())
@@ -209,7 +211,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
                 .enqueue(getAllSessionsCallBack);
     }
 
-    // Callback to update the list of sessions and recycler view that displays them
+    //Callback to update the list of sessions and recycler view that displays them
     private GraphQLCall.Callback<ListSessionsQuery.Data> getAllSessionsCallBack = new GraphQLCall.Callback<ListSessionsQuery.Data>() {
         @Override
         public void onResponse(@Nonnull final Response<ListSessionsQuery.Data> response) {
@@ -231,9 +233,9 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         }
     };
 
-    // get current user location
+    //Get current player location
     private void getCurrentUserLocation() {
-        Log.i(TAG, "called getCurrentUserLocation");
+        Log.i(TAG, "Called getCurrentUserLocation");
         fusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
             @Override
             public void onSuccess(final Location location) {
@@ -244,7 +246,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
                         public void run() {
                             currentUserLocation = new LatLng(location.getLatitude(), location.getLongitude());
                             queryAllSessions();
-                            Log.i(TAG, "playerId in getcurrentUserlocation " + playerId);
+                            Log.i(TAG, "PlayerId in getcurrentUserlocation " + playerId);
                             if (playerId == null) {
                                 createPlayer();
                             }
@@ -260,9 +262,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         });
     }
 
-    // TODO: Build onDestroy that deletes user data from DB
-
-
+    //Check if the player's username is already in the database
     private void checkIfPlayerAlreadyExistInDatabase() {
         awsAppSyncClient.query(ListPlayersQuery.builder().build())
                 .responseFetcher(AppSyncResponseFetchers.NETWORK_ONLY)
@@ -285,12 +285,12 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
 
                     @Override
                     public void onFailure(@Nonnull ApolloException e) {
-                        Log.e(TAG, "error in checking if a player already exists in database");
+                        Log.e(TAG, "Error in checking if a player already exists in database");
                     }
                 });
     }
 
-    // Make a Player
+    //Make a new player using their location, username, and start them as not it (human)
     private void createPlayer() {
         CreatePlayerInput input = CreatePlayerInput.builder()
                 .lat(currentUserLocation.latitude)
@@ -302,23 +302,24 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         awsAppSyncClient.mutate(createPlayerMutation).enqueue(new GraphQLCall.Callback<CreatePlayerMutation.Data>() {
             @Override
             public void onResponse(@Nonnull Response<CreatePlayerMutation.Data> response) {
-                Log.i(TAG, "created a player");
+                Log.i(TAG, "Created a player");
                 playerId = response.data().createPlayer().id();
             }
 
             @Override
             public void onFailure(@Nonnull ApolloException e) {
-                Log.e(TAG, "error in creating new player");
+                Log.e(TAG, "Error in creating new player");
             }
         });
     }
 
-    // Checks if Gps Location is turned on or not on the user's phone
+    //Checks if GPS Location is turned on or not on the user's phone
     private boolean checkGpsStatus() {
         locationManager = (LocationManager)getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
     }
 
+    //Prompt the player that their GPS is not enabled and to turn it on to play
     private void buildAlertMessageNoGps() {
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage("Your GPS is disabled, do you want to enable it?")
@@ -337,7 +338,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         alert.show();
     }
 
-    // filter out list of sessions to a smaller list that consist of sessions nearby the player's location
+    //Filter the sessions fed to the recyclerView so the player only sees games within a defined distance from their location
     private List<ListSessionsQuery.Item> filterSessionsBasedOnDistance(List<ListSessionsQuery.Item> allSessions) {
         List<ListSessionsQuery.Item> filteredSessions = new LinkedList<>();
         for (ListSessionsQuery.Item session : allSessions) {
@@ -351,4 +352,8 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         }
         return filteredSessions;
     }
+
+    //TODO: Build onDestroy that deletes user data from DB
+    //TODO: Need to remove the player marker when they close the app so they don't keep showing up in the game session after they think they've left
+    //TODO: Add subscription to recyclerView
 }

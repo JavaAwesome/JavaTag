@@ -90,59 +90,51 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+        //Obtain the SupportMapFragment
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        // initialize connection with google location services
+        //Initialize the connection with google location services
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        // establish connection to AWS
+        //Establish the connection to AWS
         awsAppSyncClient = AWSAppSyncClient.builder()
                 .context(getApplicationContext())
                 .awsConfiguration(new AWSConfiguration(getApplicationContext()))
                 .build();
 
+        //Player map pins for human and zombie icons
         zombiepin = BitmapDescriptorFactory.fromResource(R.drawable.zombiepin);
         playerpin = BitmapDescriptorFactory.fromResource(R.drawable.playerpin);
 
-        // getting extras
+        //Get the player's id and the session id
         playerID = getIntent().getStringExtra("userID");
         sessionId = getIntent().getStringExtra("sessionId");
         Log.i(TAG, "Session ID for map is: " + sessionId + "the player Id is " + playerID);
 
         associateUserWithSession();
 
-        // Pull user ID from MainActivity
-        // If player comes from the recyclerView it will come through as null so we will create a new player
-        // Else the player created the game and we will query the player object
-//        if (playerID == null) {
-//            createPlayer();
-//        } else {
-//            queryForPlayerObject();
-//        }
-
-        //Stuff doesn't start running until the map is ready in onMapReady(Map stuff)
+        //Run sendUserLocationQuery and update all the player markers in the game session once the map is ready
         mLocationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 Log.i(TAG, "Location call back results " + locationResult.toString());
                 if (locationResult == null) {
-                    Log.i(TAG, "location result is null");
+                    Log.i(TAG, "Location result is null");
                     return;
                 }
 
-                sendUserLocationQuery(locationResult);
                 updateMarkerAndCircleForAllPlayers(players);
+                sendUserLocationQuery(locationResult);
 
             }
         };
     }
 
-    // ===== Send user info to DynamoDB ====
+    //Send player info to DynamoDB
     private void sendUserLocationQuery(LocationResult locationResult) {
-        Log.i(TAG, "player being sent " + (player == null ? "null" : player.toString()));
+        Log.i(TAG, "Player being sent " + (player == null ? "null" : player.toString()));
         UpdatePlayerInput updatePlayerInput = UpdatePlayerInput.builder()
                 .id(playerID)
                 .playerSessionId(sessionId)
@@ -158,18 +150,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .enqueue(new GraphQLCall.Callback<UpdatePlayerMutation.Data>() {
             @Override
             public void onResponse(@Nonnull Response<UpdatePlayerMutation.Data> response) {
-                Log.i(TAG, "update success");
+                Log.i(TAG, "Update successful");
             }
 
             @Override
             public void onFailure(@Nonnull ApolloException e) {
-                Log.e(TAG, "update not successful");
+                Log.e(TAG, "Update not successful");
             }
         });
     }
 
+    //Associate the player with the game session
     private void associateUserWithSession() {
-        Log.i(TAG, "player being sent " + (player == null ? "null" : player.toString()));
+        Log.i(TAG, "Player being sent " + (player == null ? "null" : player.toString()));
         UpdatePlayerInput updatePlayerInput = UpdatePlayerInput.builder()
                 .id(playerID)
                 .playerSessionId(sessionId)
@@ -182,22 +175,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .enqueue(new GraphQLCall.Callback<UpdatePlayerMutation.Data>() {
                     @Override
                     public void onResponse(@Nonnull Response<UpdatePlayerMutation.Data> response) {
-                        Log.i(TAG, "update success");
+                        Log.i(TAG, "Update successful");
                         queryForSelectedSession(sessionId);
                     }
 
                     @Override
                     public void onFailure(@Nonnull ApolloException e) {
-                        Log.e(TAG, "update not successful");
+                        Log.e(TAG, "Update not successful");
                     }
                 });
     }
 
-    // ===== Subscribe to Data real-time ======
+    //Subscribe to the database data close to real-time
     // https://aws-amplify.github.io/docs/android/api
 
     private void subscribe() {
-
             OnUpdatePlayerSubscription subscription = OnUpdatePlayerSubscription.builder().build();
             subscriptionWatcher = awsAppSyncClient.subscribe(subscription);
             subscriptionWatcher.execute(subCallback);
@@ -206,12 +198,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         private AppSyncSubscriptionCall.Callback<OnUpdatePlayerSubscription.Data> subCallback = new AppSyncSubscriptionCall.Callback<OnUpdatePlayerSubscription.Data>() {
             @Override
             public void onResponse(@Nonnull final Response<OnUpdatePlayerSubscription.Data> response) {
-                Log.i(TAG, "************* !!!! *******" + response.data().toString());
+                Log.i(TAG, "Subscription subCallback " + response.data().toString());
 
                 Handler h = new Handler(Looper.getMainLooper()) {
                     @Override
                     public void handleMessage (Message inputMessage) {
-                        // Iterate over the players on the map
+                        //Iterate over the players in the session
                         //TODO: if session matches; then if player in players update location, else make a new player and add their marker.
                         OnUpdatePlayerSubscription.OnUpdatePlayer updatePlayer = response.data().onUpdatePlayer();
 
