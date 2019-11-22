@@ -172,7 +172,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
     ///////////// Turn on Camera ///////////////////
     public void goToProfile(View view){
         Intent goToProfile = new Intent(this, UserProfile.class);
-        this.startActivity(goToProfile);
+        this.startActivity(goToProfile.putExtra("playerId",playerId));
     }
 
     /////////////
@@ -334,6 +334,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
                 .lon(currentUserLocation.longitude)
                 .username(AWSMobileClient.getInstance().getUsername())
                 .isIt(false)
+                .photo("drawable://" + R.drawable.avatar)
                 .build();
         CreatePlayerMutation createPlayerMutation = CreatePlayerMutation.builder().input(input).build();
         awsAppSyncClient.mutate(createPlayerMutation).enqueue(new GraphQLCall.Callback<CreatePlayerMutation.Data>() {
