@@ -159,24 +159,22 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         }
     }
 
+    ///////////// Go to user page ///////////////////
+    public void goToUserPage(View view){
+        Intent goToUserPage = new Intent(this, UserProfile.class);
+        this.startActivity(goToUserPage);
+    }
+
     //////// TEST BUTTON /////
     public void onTestyClick(View view) {
         startActivity(new Intent(MainActivity.this, NotificationActivity.class));
     }
 
-    ///////////// Turn on Camera ///////////////////
-    public void goToCameraClass(View view){
-        Intent goToCamera = new Intent(this, ShowMeYourFace.class);
-        this.startActivity(goToCamera);
-    }
-
-    /////////////
-
     // Direct users to sign in page
     private void signInUser() {
         AWSMobileClient.getInstance().showSignIn(MainActivity.this,
                 // customize the built in sign in page
-                SignInUIOptions.builder().backgroundColor(16763080).build(),
+                SignInUIOptions.builder().backgroundColor(16763080).logo(R.drawable.zombieicon).build(),
                 new Callback<UserStateDetails>() {
                     @Override
                     public void onResult(UserStateDetails result) {
