@@ -254,18 +254,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 players.add(newPlayer);
                             }
                         }
-//                        for(Player player : players) {
-//                            if(response.data().onUpdatePlayer().id().equals(player.getId())) {
-//                                // if true (we have a match) update players lat/long
-//                                List<LatLng> bananasList = new LinkedList<>();
-//                                bananasList.add(new LatLng(response.data().onUpdatePlayer().lat(),
-//                                        response.data().onUpdatePlayer().lon()));
-//                                player.setLocations(bananasList); // sets location for the player
-//                                //Might have been causing the starting point to move
-////                                player.getCircle().setCenter(player.getLastLocation());
-////                                player.getMarker().setPosition(player.getLastLocation());
-//                            }
-//                        }
                     }
                 };
                 h.obtainMessage().sendToTarget();
