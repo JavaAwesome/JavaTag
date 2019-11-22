@@ -112,7 +112,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         sessionId = getIntent().getStringExtra("sessionId");
         Log.i(TAG, "Session ID for map is: " + sessionId + "the player Id is " + playerID);
 
-        queryForSelectedSession(sessionId);
+        associateUserWithSession();
 
         // Pull user ID from MainActivity
         // If player comes from the recyclerView it will come through as null so we will create a new player
@@ -133,8 +133,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     return;
                 }
 
-                sendUserLocationQuery(locationResult);
                 updateMarkerAndCircleForAllPlayers(players);
+                sendUserLocationQuery(locationResult);
 
             }
         };
@@ -166,6 +166,31 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Log.e(TAG, "update not successful");
             }
         });
+    }
+
+    private void associateUserWithSession() {
+        Log.i(TAG, "player being sent " + (player == null ? "null" : player.toString()));
+        UpdatePlayerInput updatePlayerInput = UpdatePlayerInput.builder()
+                .id(playerID)
+                .playerSessionId(sessionId)
+                .build();
+
+        UpdatePlayerMutation updatePlayerMutation = UpdatePlayerMutation.builder()
+                .input(updatePlayerInput).build();
+
+        awsAppSyncClient.mutate(updatePlayerMutation)
+                .enqueue(new GraphQLCall.Callback<UpdatePlayerMutation.Data>() {
+                    @Override
+                    public void onResponse(@Nonnull Response<UpdatePlayerMutation.Data> response) {
+                        Log.i(TAG, "update success");
+                        queryForSelectedSession(sessionId);
+                    }
+
+                    @Override
+                    public void onFailure(@Nonnull ApolloException e) {
+                        Log.e(TAG, "update not successful");
+                    }
+                });
     }
 
     // ===== Subscribe to Data real-time ======
@@ -212,10 +237,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             //if the player is in the session, but not in the player list, then make a new player and add them to the players list and add a marker
                             if(contains ==  false){
                                 Marker marker = mMap.addMarker(new MarkerOptions()
-                                        .position(player.getLastLocation())
-                                        .title(player.getUsername()));
+                                        .position(new LatLng(updatePlayer.lat(), updatePlayer.lon()))
+                                        .title(updatePlayer.username()));
                                 Circle circle = mMap.addCircle(new CircleOptions()
-                                        .center(player.getLastLocation())
+                                        .center(new LatLng(updatePlayer.lat(), updatePlayer.lon()))
                                         .radius(tagDistance)
                                         .fillColor(Color.TRANSPARENT)
                                         .strokeWidth(3));
@@ -278,6 +303,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         super.onResume();
         subscribe();
 //        startLocationUpdates();
+    }
+
+    public void onDestroy() {
+        super.onDestroy();
+        Log.i(TAG, "Our session was destroyed... trying to set player to false");
+        UpdatePlayerInput updatePlayerInput = UpdatePlayerInput.builder()
+                .id(playerID)
+                .playerSessionId(null)
+                .isIt(false)
+                .build();
+        UpdatePlayerMutation updatePlayerMutation = UpdatePlayerMutation.builder()
+                .input(updatePlayerInput).build();
+        awsAppSyncClient.mutate(updatePlayerMutation)
+                .enqueue(new GraphQLCall.Callback<UpdatePlayerMutation.Data>() {
+                    @Override
+                    public void onResponse(@Nonnull Response<UpdatePlayerMutation.Data> response) {
+                        Log.i(TAG, "onDestroy successful");
+                    }
+                    @Override
+                    public void onFailure(@Nonnull ApolloException e) {
+                        Log.e(TAG, "onDestroy not successful");
+                    }
+                });
     }
 
     /**
@@ -391,6 +439,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             if (itPlayers.isEmpty()) {
                 itPlayers.add(players.get(0));
+                players.get(0).setIt(true);
             }
         }
 
@@ -592,11 +641,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Log.i(TAG, "Starting point is " + startingPoint);
 
             //once the session ID and starting loc are in place, then make the first player.
-            if (playerID == null) {
-                createPlayer();
-            } else {
-                queryForPlayerObject();
-            }
+            queryForPlayerObject();
+//            if (playerID == null) {
+//                createPlayer();
+//            } else {
+//                queryForPlayerObject();
+//            }
 
             Log.i(TAG, "Made it to the after the if/else within getSessionCallBack");
             //converting from GetSessionItems to players
@@ -636,5 +686,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     };
 
     // TODO: Build onDestroy that deletes user data from DB
+//    @Override
+//    protected void onDestroy() {
+//        super.onDestroy();
+//    }
 
 }

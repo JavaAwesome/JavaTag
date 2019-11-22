@@ -27,19 +27,29 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.amazonaws.amplify.generated.graphql.GetPlayerQuery;
+import com.amazonaws.amplify.generated.graphql.UpdatePlayerMutation;
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.config.AWSConfiguration;
 import com.amazonaws.mobileconnectors.appsync.AWSAppSyncClient;
+import com.amazonaws.mobileconnectors.appsync.fetcher.AppSyncResponseFetchers;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.apollographql.apollo.GraphQLCall;
+import com.apollographql.apollo.api.Response;
+import com.apollographql.apollo.exception.ApolloException;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.File;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+
+import javax.annotation.Nonnull;
+
+import type.UpdatePlayerInput;
 
 
 public class ShowMeYourFace extends AppCompatActivity {
@@ -47,10 +57,16 @@ public class ShowMeYourFace extends AppCompatActivity {
     private static boolean upload = false;
     private ImageCapture imageCapture;
     final CameraX.LensFacing camera = CameraX.LensFacing.FRONT;
+
+//    set to absolute path eventualy
     String profPicPath = null;
+//
     String s3path = null;
+    String userPhoto;
     AWSAppSyncClient mAWSAppSyncClient;
+// created by picSnap
     File profilePic = null;
+
 
     public static boolean isUpload() {
         return upload;
@@ -69,6 +85,7 @@ public class ShowMeYourFace extends AppCompatActivity {
         super.onResume();
         if(upload && profPicPath != null && profilePic != null){
             uploadDataToS3(s3path, profilePic);
+//            update photo in Dynamo
             finish();
         }
     }
@@ -97,14 +114,14 @@ public class ShowMeYourFace extends AppCompatActivity {
             } else {
                 // No explanation needed; request the permission
                 ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.CAMERA},
+                        new String[]{Manifest.permission.CAMERA, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE},
                         1);
             }
         }else {
 
 //************************************ Setup Buttons **********************************************
             FloatingActionButton picSnap = findViewById(R.id.picSnap);
-//          FloatingActionButton switchCamera = findViewById(R.id.fab_switch_camera);
+//          FloatingActionButton switchCamera = findViewById(R.id.fab_switch_camera);,
 //          FloatingActionButton fab_flash = findViewById(R.id.fab_flash);
 
 // **********************************   Setup Camera   **********************************************
@@ -113,6 +130,7 @@ public class ShowMeYourFace extends AppCompatActivity {
 //***************************************   Shutter Button Action ****************************************
 
             picSnap.setOnClickListener(event -> {
+//                put picture localy in the phone
                 s3path = AWSMobileClient.getInstance().getUsername()+ "profilePic.png";
                 profilePic = new File(Environment.getExternalStorageDirectory() + "/" + s3path);
 //
@@ -254,8 +272,9 @@ public class ShowMeYourFace extends AppCompatActivity {
                     upload=false;
                     Log.i(TAG, "onStateChanged: Uploaded Profile Pic");
                     Toast.makeText(getBaseContext(), "Picture Save Complete",Toast.LENGTH_LONG).show();
-                    String bucketPath = uploadObserver.getBucket() +"/" +uploadObserver.getKey();
-                    Log.i(TAG, "onStateChanged: " + bucketPath + "*************************************************************************");
+                    String imgUrl = MainActivity.photoBucketPath + uploadObserver.getKey();
+                    Log.i(TAG, "onStateChanged: " + imgUrl + "*************************************************************************");
+                    updatePlayerInput(imgUrl);
                 }
             }
             @Override
@@ -272,6 +291,48 @@ public class ShowMeYourFace extends AppCompatActivity {
             }
         });
     }
+
+
+    private void updatePlayerInput(String imgURL){
+        Log.i(TAG, "created a player"+ getIntent().getStringExtra("playerId"));
+        UpdatePlayerInput updatePlayerInput = UpdatePlayerInput.builder()
+                .id(getIntent().getStringExtra("playerId"))
+                .photo(imgURL)
+                .build();
+
+        UpdatePlayerMutation updatePlayerMutation = UpdatePlayerMutation.builder()
+                .input(updatePlayerInput).build();
+                mAWSAppSyncClient.mutate(updatePlayerMutation)
+                .enqueue(new GraphQLCall.Callback<UpdatePlayerMutation.Data>() {
+            @Override
+            public void onResponse(@Nonnull Response<UpdatePlayerMutation.Data> response) {
+                Log.i(TAG, "update success");
+
+            }
+
+            @Override
+            public void onFailure(@Nonnull ApolloException e) {
+                Log.e(TAG, "update not successful");
+            }
+        });
+    }
+//    private void queryForPlayerObject(String playerId) {
+//        GetPlayerQuery query = GetPlayerQuery.builder().id(playerId).build();
+//        mAWSAppSyncClient.query(query)
+//                .responseFetcher(AppSyncResponseFetchers.NETWORK_ONLY)
+//                .enqueue(new GraphQLCall.Callback<GetPlayerQuery.Data>() {
+//                    @Override
+//                    public void onResponse(@Nonnull Response<GetPlayerQuery.Data> response) {
+//                        Log.i(TAG, "made it to making a query for player object");
+//                        userPhoto = response.data().getPlayer().Photo(profile pic);
+//                    }
+//
+//                    @Override
+//                    public void onFailure(@Nonnull ApolloException e) {
+//
+//                    }
+//                });
+//    }
 
 }
 //// **************** Checks to see if flash is present on the current camera and *********************
