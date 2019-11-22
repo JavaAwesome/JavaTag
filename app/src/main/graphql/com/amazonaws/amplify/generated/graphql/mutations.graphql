@@ -1,0 +1,121 @@
+# this is an auto generated file. This will be overwritten
+mutation CreateSession($input: CreateSessionInput!) {
+  createSession(input: $input) {
+    id
+    title
+    players {
+      items {
+        id
+        username
+        isIt
+        lat
+        lon
+        Photo
+      }
+      nextToken
+    }
+    lat
+    lon
+    radius
+  }
+}
+mutation UpdateSession($input: UpdateSessionInput!) {
+  updateSession(input: $input) {
+    id
+    title
+    players {
+      items {
+        id
+        username
+        isIt
+        lat
+        lon
+        Photo
+      }
+      nextToken
+    }
+    lat
+    lon
+    radius
+  }
+}
+mutation DeleteSession($input: DeleteSessionInput!) {
+  deleteSession(input: $input) {
+    id
+    title
+    players {
+      items {
+        id
+        username
+        isIt
+        lat
+        lon
+        Photo
+      }
+      nextToken
+    }
+    lat
+    lon
+    radius
+  }
+}
+mutation CreatePlayer($input: CreatePlayerInput!) {
+  createPlayer(input: $input) {
+    id
+    username
+    session {
+      id
+      title
+      players {
+        nextToken
+      }
+      lat
+      lon
+      radius
+    }
+    isIt
+    lat
+    lon
+    Photo
+  }
+}
+mutation UpdatePlayer($input: UpdatePlayerInput!) {
+  updatePlayer(input: $input) {
+    id
+    username
+    session {
+      id
+      title
+      players {
+        nextToken
+      }
+      lat
+      lon
+      radius
+    }
+    isIt
+    lat
+    lon
+    Photo
+  }
+}
+mutation DeletePlayer($input: DeletePlayerInput!) {
+  deletePlayer(input: $input) {
+    id
+    username
+    session {
+      id
+      title
+      players {
+        nextToken
+      }
+      lat
+      lon
+      radius
+    }
+    isIt
+    lat
+    lon
+    Photo
+  }
+}

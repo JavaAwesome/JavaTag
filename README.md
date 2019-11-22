@@ -1,5 +1,10 @@
 # JavaTag: Code 401 Final Project
 
+## APK
+To download and play Zombie Tag click the zombie below  
+
+[![Build Status](https://github.com/JavaAwesome/JavaTag/blob/Dev/app/src/main/res/mipmap-hdpi/ic_launcher_round.png)](https://github.com/JavaAwesome/JavaTag/blob/Dev/zombietag.apk)
+
 ## Team Members
 * Ahren Swett
 * James Dansie
@@ -25,6 +30,9 @@ No contribution guidelines at this point.
 ### User Stories
 
 ### Wireframes
+![wire frame](./assets/Page_1.png)
+![wire frame](./assets/Page_2.png)
+![wire frame](./assets/Page_3.png)
 
 ### Project Scope
 #### MVP
@@ -44,10 +52,56 @@ No contribution guidelines at this point.
 
 ### Daily Team Workflow
 #### Day 1
+* Implemented the Google Maps object
+    * TAG possibility of Distance implemented
+    * TAG possibility of tapping tag button partially implemented
+* Figured out how to pass data to Google Maps to render pins
+* Setup DynamoDB
+    * Player model
+    * Session model
+* Created activities
+    * Map
+    * Main
+* Setup Cognito
+* Created recyclerview to pull current sessions
+* Created dummy team and session, loaded it to the database
+* Started logic to utilize tagging by pictures
+* Started logic to update which user is tagged  
 
 #### Day 2
+* Added permissions 
+* Fixed recycler view :D
+* Creating a session and passing in the users lat/lon to create the boundary
+* Querying the database for sessions
+* Modified initializeMarkerAndPlayers to allow its self to override
+    * Sets the markers and colors based on players
+    * Now called from callback from querying the database
+* Created a query for a selected session
+    * Creates an instance based on that ID
+    * Creates the starting point based on the users lat/lon
+    * Converting players from database back into players
+        * Created overloaded constructor in Player to allow this
+* Completed logic to render players to map
+    * Still need to add refresh logic to the render
+    * Validated if a user is already in a session or not
+* Started fun logic when player is tagged to show some sort of notification
+    * Figured out Vibrator!
+* Allowed players to join existing sessions  
 
 #### Day 3
+* Camera logic is mostly config complete, need to save and pull from database
+    * Added a new permission for CAMERA
+* Figured out more logic of updating users in the database
+    * A users lat/lon will now update when moving
+* Created logic to prevent duplicate users each time we login/start app
+* Completed logic to render players on a map live!
+    * When a player joins a game, it creates their initial markers
+        * When a player moves, the markers moves
+	     * When it marker collides with not it, not it becomes tagged
+	     * When a player creates a session, it no longer crashes
+* Started styling the app!
+    * Figured out how to create a custom icon, theme, action bar, animations, and button design
+    * Started working on map pin icon
 
 #### Day 4
 
@@ -111,5 +165,7 @@ Java 401 Instructional Team
 * Nicholas
 * Jeff
 * Ginger
+
+* Camera icon made by Pixel Buddha from Flaticon www.flaticon.com
 
 ## License

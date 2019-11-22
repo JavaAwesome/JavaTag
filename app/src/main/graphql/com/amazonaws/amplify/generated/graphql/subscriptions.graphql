@@ -1,0 +1,121 @@
+# this is an auto generated file. This will be overwritten
+subscription OnCreateSession {
+  onCreateSession {
+    id
+    title
+    players {
+      items {
+        id
+        username
+        isIt
+        lat
+        lon
+        Photo
+      }
+      nextToken
+    }
+    lat
+    lon
+    radius
+  }
+}
+subscription OnUpdateSession {
+  onUpdateSession {
+    id
+    title
+    players {
+      items {
+        id
+        username
+        isIt
+        lat
+        lon
+        Photo
+      }
+      nextToken
+    }
+    lat
+    lon
+    radius
+  }
+}
+subscription OnDeleteSession {
+  onDeleteSession {
+    id
+    title
+    players {
+      items {
+        id
+        username
+        isIt
+        lat
+        lon
+        Photo
+      }
+      nextToken
+    }
+    lat
+    lon
+    radius
+  }
+}
+subscription OnCreatePlayer {
+  onCreatePlayer {
+    id
+    username
+    session {
+      id
+      title
+      players {
+        nextToken
+      }
+      lat
+      lon
+      radius
+    }
+    isIt
+    lat
+    lon
+    Photo
+  }
+}
+subscription OnUpdatePlayer {
+  onUpdatePlayer {
+    id
+    username
+    session {
+      id
+      title
+      players {
+        nextToken
+      }
+      lat
+      lon
+      radius
+    }
+    isIt
+    lat
+    lon
+    Photo
+  }
+}
+subscription OnDeletePlayer {
+  onDeletePlayer {
+    id
+    username
+    session {
+      id
+      title
+      players {
+        nextToken
+      }
+      lat
+      lon
+      radius
+    }
+    isIt
+    lat
+    lon
+    Photo
+  }
+}

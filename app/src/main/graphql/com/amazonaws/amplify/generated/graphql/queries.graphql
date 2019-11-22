@@ -1,0 +1,84 @@
+# this is an auto generated file. This will be overwritten
+query GetSession($id: ID!) {
+  getSession(id: $id) {
+    id
+    title
+    players {
+      items {
+        id
+        username
+        isIt
+        lat
+        lon
+        Photo
+      }
+      nextToken
+    }
+    lat
+    lon
+    radius
+  }
+}
+query ListSessions(
+  $filter: ModelSessionFilterInput
+  $limit: Int
+  $nextToken: String
+) {
+  listSessions(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    items {
+      id
+      title
+      players {
+        nextToken
+      }
+      lat
+      lon
+      radius
+    }
+    nextToken
+  }
+}
+query GetPlayer($id: ID!) {
+  getPlayer(id: $id) {
+    id
+    username
+    session {
+      id
+      title
+      players {
+        nextToken
+      }
+      lat
+      lon
+      radius
+    }
+    isIt
+    lat
+    lon
+    Photo
+  }
+}
+query ListPlayers(
+  $filter: ModelPlayerFilterInput
+  $limit: Int
+  $nextToken: String
+) {
+  listPlayers(filter: $filter, limit: $limit, nextToken: $nextToken) {
+    items {
+      id
+      username
+      session {
+        id
+        title
+        lat
+        lon
+        radius
+      }
+      isIt
+      lat
+      lon
+      Photo
+    }
+    nextToken
+  }
+}

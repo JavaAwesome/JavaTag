@@ -1,0 +1,18 @@
+type Session @model {
+  id: ID!
+  title: String!
+  players: [Player] @connection(name: "Players")
+  lat: Float!
+  lon: Float!
+  radius: Int!
+}
+
+type Player @model {
+  id: ID!
+  username: String!
+  session: Session @connection(name: "Players")
+  isIt: Boolean!
+  lat: Float!
+  lon: Float!
+  Photo: String
+}
