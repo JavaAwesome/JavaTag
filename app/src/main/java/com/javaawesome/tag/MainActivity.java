@@ -119,14 +119,17 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
     protected void onResume() {
         super.onResume();
         Log.i(TAG, "onResume called");
+        //If checkGpsStatus returns true to verify that the player's phone has GPS is turned on
         if (checkGpsStatus()) {
+            //Check if the player is already in the database
             checkIfPlayerAlreadyExistInDatabase();
         } else {
+            //Ask the player if they want to turn on their GPS to play
             buildAlertMessageNoGps();
         }
     }
 
-    // Create new game session and go to map page
+    //Create a new game session and go to map page
     public void goToMap(View view) {
         // TODO: check if player already exist in the database
         EditText sessionName = findViewById(R.id.editText_session_name);
@@ -165,16 +168,11 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         this.startActivity(goToUserPage);
     }
 
-    //////// TEST BUTTON /////
-    public void onTestyClick(View view) {
-        startActivity(new Intent(MainActivity.this, NotificationActivity.class));
-    }
-
     // Direct users to sign in page
     private void signInUser() {
         AWSMobileClient.getInstance().showSignIn(MainActivity.this,
                 // customize the built in sign in page
-                SignInUIOptions.builder().backgroundColor(16763080).logo(R.drawable.zombieicon).build(),
+                SignInUIOptions.builder().backgroundColor(16763080).logo(R.mipmap.ic_launcher_round).build(),
                 new Callback<UserStateDetails>() {
                     @Override
                     public void onResult(UserStateDetails result) {
