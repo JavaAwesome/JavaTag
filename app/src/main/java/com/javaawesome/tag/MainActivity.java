@@ -6,8 +6,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -18,12 +16,10 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
-
 import com.amazonaws.amplify.generated.graphql.CreatePlayerMutation;
 import com.amazonaws.amplify.generated.graphql.CreateSessionMutation;
 import com.amazonaws.amplify.generated.graphql.ListPlayersQuery;
@@ -72,14 +68,19 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //Transfer service registers a listener with Android OS for network connectivity changes
+        //If the network goes offline, the active transfers are paused
+        //Active transfers resume when the nextwork comes back online
+        //Works in the foreground and the background
         getApplicationContext().startService(new Intent(getApplicationContext(), TransferService.class));
 
+        //If the app does not have course or fine location permission request them
         if (this.checkSelfPermission(ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED ||
                 this.checkSelfPermission(ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{ACCESS_FINE_LOCATION, ACCESS_COARSE_LOCATION}, 10);
         }
 
-        // initialize aws mobile client and check if you are logged in or not
+        //Initialize AWS mobile client and check if the player is logged in
         AWSMobileClient.getInstance().initialize(getApplicationContext(), new Callback<UserStateDetails>() {
             @Override
             public void onResult(UserStateDetails result) {
@@ -95,19 +96,19 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
             }
         });
 
-        // connect to AWS
+        //Connect to AWS
         awsAppSyncClient = AWSAppSyncClient.builder()
                 .context(getApplicationContext())
                 .awsConfiguration(new AWSConfiguration(getApplicationContext()))
                 .build();
 
-        // initialize client for google location services
+        //Initialize client for google location services
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
+        //Initialize a new Linked List of game sessions
         sessions = new LinkedList<>();
 
-        // initialize recycler view to display nearby game sessions
-        // TODO: have recycler view filter sessions by distance to user
+        //Initialize a recycler view to display game sessions within the defined distance of the player's location
         recyclerNearbySessions = findViewById(R.id.recycler_nearby_sessions);
         recyclerNearbySessions.setLayoutManager(new LinearLayoutManager(this));
         this.sessionAdapter = new SessionAdapter(this.sessions, this);
@@ -117,9 +118,8 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
     @Override
     protected void onResume() {
         super.onResume();
-        Log.i(TAG, "onresume called");
+        Log.i(TAG, "onResume called");
         if (checkGpsStatus()) {
-//            getCurrentUserLocation();
             checkIfPlayerAlreadyExistInDatabase();
         } else {
             buildAlertMessageNoGps();
@@ -202,34 +202,6 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         goToMapIntent.putExtra("userID", playerId);
         this.startActivity(goToMapIntent);
     }
-
-//    @Override
-//    public void addPlayerToChosenGame(final ListSessionsQuery.Item session) {
-////        Query
-//        CreatePlayerInput playerInput = CreatePlayerInput.builder()
-//                .playerSessionId(session.id())
-//                .isIt(false)
-//                .lat(currentUserLocation.latitude)
-//                .lon(currentUserLocation.longitude)
-//                .username(AWSMobileClient.getInstance().getUsername())
-//                .build();
-//        CreatePlayerMutation createPlayerMutation = CreatePlayerMutation.builder().input(playerInput).build();
-//        awsAppSyncClient.mutate(createPlayerMutation).enqueue((new GraphQLCall.Callback<CreatePlayerMutation.Data>() {
-//            @Override
-//            public void onResponse(@Nonnull Response<CreatePlayerMutation.Data> response) {
-//                String userID = response.data().createPlayer().id();
-//                Log.i(TAG, "player mutation happened! ... inside of a session mutation");
-//                Intent goToMapIntent = new Intent(MainActivity.this, MapsActivity.class);
-//                goToMapIntent.putExtra("sessionId", session.id());
-//                goToMapIntent.putExtra("userID", userID);
-//                Log.i("veach", session.id() + "\n" +userID);
-//            }
-//            @Override
-//            public void onFailure(@Nonnull ApolloException e) {
-//                Log.i(TAG, "mutation of player failed, boohoo!");
-//            }
-//        }));
-//    }
 
     // get all sessions
     private void queryAllSessions() {
