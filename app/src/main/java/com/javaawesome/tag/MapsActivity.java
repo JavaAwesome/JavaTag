@@ -225,7 +225,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                                 Player newPlayer = new Player();
                                 newPlayer.setId(updatePlayer.id());
-                                newPlayer.setIt(false);
+                                newPlayer.setIt(false);  // <-----------------------------------------------------
                                 newPlayer.setMarker(marker);
                                 newPlayer.setCircle(circle);
                                 newPlayer.setUsername(updatePlayer.username());
@@ -448,7 +448,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private boolean checkForTag(Player player) {
         Log.i(TAG, "Made it into checkForTag");
         if (player.isIt()) {
-            return false;
+            return false; // <-------------------------------------------------------------
         }
         for(Player itPlayer : itPlayers) {
             Log.i(TAG, itPlayer.toString());
@@ -481,7 +481,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .lat(startingPoint.latitude)
                 .lon(startingPoint.longitude)
                 .username(AWSMobileClient.getInstance().getUsername())
-                .isIt(false)
+                .isIt(false) // <------------------------------------------------------------------
                 .build();
         CreatePlayerMutation createPlayerMutation = CreatePlayerMutation.builder().input(input).build();
 
@@ -492,7 +492,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 playerID = response.data().createPlayer().id();
                 player = new Player();
                 player.setId(playerID);
-                player.setIt(false);
+                player.setIt(false); // <------------------------------------------------------
                 player.setUsername(AWSMobileClient.getInstance().getUsername());
                 List<LatLng> bananas = new LinkedList<>();
                 bananas.add(startingPoint);
@@ -613,5 +613,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     };
 
     // TODO: Build onDestroy that deletes user data from DB
+//    @Override
+//    protected void onDestroy() {
+//        super.onDestroy();
+//    }
 
 }
