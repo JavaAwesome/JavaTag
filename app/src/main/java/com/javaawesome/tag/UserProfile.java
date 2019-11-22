@@ -9,6 +9,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.amazonaws.mobile.client.AWSMobileClient;
+import com.squareup.picasso.Picasso;
 
 public class UserProfile extends AppCompatActivity {
 
@@ -18,6 +19,7 @@ public class UserProfile extends AppCompatActivity {
         setContentView(R.layout.activity_user_profile);
 
         ImageView profPic = findViewById(R.id.profilePicture);
+        Picasso.get().load(AWSMobileClient.getInstance().photo()).into(profPic);
 
 
         TextView username = findViewById(R.id.username);
