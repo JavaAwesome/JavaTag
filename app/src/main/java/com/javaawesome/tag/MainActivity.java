@@ -53,7 +53,7 @@ import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
 public class MainActivity extends AppCompatActivity implements SessionAdapter.OnSessionInteractionListener {
-
+    protected static String photoBucketPath = "https://javatag091c7e33ab0441e4bdf34cbdf68d2bd1-local.s3-us-west-2.amazonaws.com/";
     private final String TAG = "javatag";
     RecyclerView recyclerNearbySessions;
     SessionAdapter sessionAdapter;
@@ -162,13 +162,16 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
     ///////////// Go to user page ///////////////////
     public void goToUserPage(View view){
         Intent goToUserPage = new Intent(this, UserProfile.class);
-        this.startActivity(goToUserPage);
+        this.startActivity(goToUserPage.putExtra("playerId",playerId));
     }
 
     //////// TEST BUTTON /////
     public void onTestyClick(View view) {
         startActivity(new Intent(MainActivity.this, NotificationActivity.class));
     }
+
+
+
 
     // Direct users to sign in page
     private void signInUser() {
@@ -327,13 +330,16 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
                 .lon(currentUserLocation.longitude)
                 .username(AWSMobileClient.getInstance().getUsername())
                 .isIt(false)
+                .photo(MainActivity.photoBucketPath + "avatar.png")
                 .build();
         CreatePlayerMutation createPlayerMutation = CreatePlayerMutation.builder().input(input).build();
         awsAppSyncClient.mutate(createPlayerMutation).enqueue(new GraphQLCall.Callback<CreatePlayerMutation.Data>() {
             @Override
             public void onResponse(@Nonnull Response<CreatePlayerMutation.Data> response) {
-                Log.i(TAG, "created a player");
+
                 playerId = response.data().createPlayer().id();
+                Log.i(TAG, "created a player"+ playerId);
+
             }
 
             @Override

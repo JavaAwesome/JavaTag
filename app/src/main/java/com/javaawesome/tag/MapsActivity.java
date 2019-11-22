@@ -135,6 +135,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 updateMarkerAndCircleForAllPlayers(players);
                 sendUserLocationQuery(locationResult);
+
             }
         };
     }
@@ -236,10 +237,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             //if the player is in the session, but not in the player list, then make a new player and add them to the players list and add a marker
                             if(contains ==  false){
                                 Marker marker = mMap.addMarker(new MarkerOptions()
-                                        .position(new LatLng(updatePlayer.lat(), updatePlayer.lon()))
-                                        .title(updatePlayer.username()));
+                                        .position(player.getLastLocation())
+                                        .title(player.getUsername()));
                                 Circle circle = mMap.addCircle(new CircleOptions()
-                                        .center(new LatLng(updatePlayer.lat(), updatePlayer.lon()))
+                                        .center(player.getLastLocation())
                                         .radius(tagDistance)
                                         .fillColor(Color.TRANSPARENT)
                                         .strokeWidth(3));
@@ -640,7 +641,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Log.i(TAG, "Starting point is " + startingPoint);
 
             //once the session ID and starting loc are in place, then make the first player.
-            queryForPlayerObject();
+            if (playerID == null) {
+                createPlayer();
+            } else {
+                queryForPlayerObject();
+            }
 
             Log.i(TAG, "Made it to the after the if/else within getSessionCallBack");
             //converting from GetSessionItems to players
