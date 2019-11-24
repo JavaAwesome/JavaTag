@@ -204,15 +204,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     @Override
                     public void handleMessage (Message inputMessage) {
                         //Iterate over the players in the session
-                        //TODO: if session matches; then if player in players update location, else make a new player and add their marker.
+                        //TODO: If session matches; if the player exists in the session update their location, if they don't, make a new player and add their marker to the session
                         OnUpdatePlayerSubscription.OnUpdatePlayer updatePlayer = response.data().onUpdatePlayer();
 
-                        Log.i(TAG, "updated user is " + updatePlayer.toString() + " session id is " + sessionId);
-                        //checking if the updated player is in this session
+                        Log.i(TAG, "Updated user is " + updatePlayer.toString() + " Session ID is " + sessionId);
+                        //Check if the updated player is in the session
                         if(updatePlayer.session().id().equals(sessionId)){
                             boolean contains = false;
 
-                            //checking if the updated player is in the current player list
+                            //Check if the updated player is in the current player list
                             for(Player player : players){
 
                                 // if we have a match update players lat/long
@@ -226,7 +226,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 }
                             }
 
-                            //if the player is in the session, but not in the player list, then make a new player and add them to the players list and add a marker
+                            //If the player is in the session, but not in the player list, make a new player and add them to the players list and add a marker to the session
                             if(contains ==  false){
                                 Marker marker = mMap.addMarker(new MarkerOptions()
                                         .position(new LatLng(updatePlayer.lat(), updatePlayer.lon()))
@@ -250,7 +250,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 potatoes.add(new LatLng(updatePlayer.lat(), updatePlayer.lon()));
                                 newPlayer.setLocations(potatoes);
 
-                                //adding player to the list of players in the game
+                                //Add player to the list of players in the game
                                 players.add(newPlayer);
                             }
                         }
@@ -270,14 +270,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     };
 
-    // =============
-
+    //Stop tracking the player's location onStop
     @Override
     protected void onStop() {
         super.onStop();
         stopTrackingLocation();
     }
 
+    //onResume, start subscription to watch for updates
     @Override
     protected void onResume() {
         super.onResume();
@@ -285,9 +285,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 //        startLocationUpdates();
     }
 
+    //onDestroy, set player to false and session ID to null
     public void onDestroy() {
         super.onDestroy();
-        Log.i(TAG, "Our session was destroyed... trying to set player to false");
+        Log.i(TAG, "Our session was destroyed... set player to false");
         UpdatePlayerInput updatePlayerInput = UpdatePlayerInput.builder()
                 .id(playerID)
                 .playerSessionId(null)
@@ -308,20 +309,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 });
     }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
-
+    //Manipulates the map and triggers the callback when the map is ready. Now available to add markers, listeners, etc. If Google Play services is not installed on the device, the user will be prompted to install it inside the SupportMapFragment. This method will only be triggered once the user has installed Google Play services and returned to the app.
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        Log.i(TAG, "map is ready");
+        Log.i(TAG, "Map is ready");
         mMap = googleMap;
 
         mMap.setMyLocationEnabled(true);
@@ -331,17 +323,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         startLocationUpdates();
     }
 
+    //Turn off location tracking
     public void stopTrackingLocation() {
         mFusedLocationClient.removeLocationUpdates(mLocationCallback);
     }
 
-    // Starts pulling location updates from the DB. 3 second delay to let the aws callbacks load first.
+    //Start pulling location updates from the DB with a 3 second delay to let the aws callbacks load first.
     private void startLocationUpdates() {
         try {
             TimeUnit.SECONDS.sleep(3);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
         mFusedLocationClient.requestLocationUpdates(getLocationRequest(), mLocationCallback, Looper.getMainLooper());
         mMap.setMyLocationEnabled(true);
     }
@@ -357,7 +351,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return false;
     }
 
-    // Called in startLocationUpdates to pull location updates from the DB
+    //Called in startLocationUpdates to pull location updates from the DB
     private LocationRequest getLocationRequest() {
         Log.i(TAG, "getting location request");
         LocationRequest locationRequest = new LocationRequest();
@@ -367,7 +361,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return locationRequest;
     }
 
-    // Creates markers and circles for each player in the list for that session
+    //Create markers and circles for each player in the list for that session
     private void initializeMarkersAndCirclesForPlayers(List<Player> players) {
         Log.i(TAG, "made it to initialized markers");
         for(Player player: players) {
@@ -393,7 +387,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             player.setMarker(marker);
 
         }
-        //      Add a marker in center of game camera and move the camera
+
+        //Add a marker in center of game camera and move the camera
         mMap.moveCamera(CameraUpdateFactory.zoomTo(16));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(startingPoint));
         Circle gameBounds = mMap.addCircle(new CircleOptions()
@@ -404,9 +399,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .strokeWidth(5));
     }
 
-
+    //Update the markers and circles for all players in the session
     private void updateMarkerAndCircleForAllPlayers(List<Player> players) {
-        Log.i(TAG, "updating markers");
+        Log.i(TAG, "Updating markers");
         Log.i(TAG, "How many players? " + players.size());
 
         if(itPlayers == null){
@@ -430,18 +425,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             if (checkForTag(player)) {
                 Log.i(TAG, "In the updateMarkerAndCircleForAllPlayers");
                 playersJustGotTagged.add(player);
-
-//                player.getMarker().setIcon(zombiepin);
-//                player.getCircle().setStrokeColor(itColor);
-
-//                mMap.addCircle(player.getCircle());
             }
-//            else {
-//                player.getMarker().setIcon(playerpin);
-//                player.getCircle().setStrokeColor(notItColor);
-//            }
         }
-        //TODO add the player instance is it update, only updates the player list so far
+
+        //TODO: Add the player instance is it update, only updates the player list so far
         for(Player player : players){
             if(player.getIt()){
                 player.getMarker().setIcon(zombiepin);
@@ -454,7 +441,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         for(Player p : players){
             if(p.getId().equals(playerID)){
-                Log.i(TAG, "Player Ids match");
+                Log.i(TAG, "Player IDs match");
                 player.setIt(p.getIt());
             }
         }
@@ -462,8 +449,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         itPlayers.addAll(playersJustGotTagged);
     }
 
-    // Equation is from https://stackoverflow.com/questions/639695/how-to-convert-latitude-or-longitude-to-meters
-    // convert to two location points to distance between them in meters
+    //Equation is from https://stackoverflow.com/questions/639695/how-to-convert-latitude-or-longitude-to-meters
+    //Convert to two location points to distance between them in meters
     private double distanceBetweenLatLongPoints(double lat1, double long1, double lat2, double long2) {
         // radius of the Earth in km
         double R = 6378.137;
@@ -477,19 +464,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return d * 1000;
     }
 
-    // check if the player is tagged by the it player
-    // check if the distance between the it player and the other player is less than the specified tag distance
+    //Check if the player is tagged by the it player
+    //Check if the distance between the it player and the other player is less than the specified tag distance
     private boolean isTagged(Player player, Player itPlayer) {
         double distanceBetweenPlayers = distanceBetweenLatLongPoints(itPlayer.getLastLocation().latitude,
                 itPlayer.getLastLocation().longitude,
                 player.getLastLocation().latitude,
                 player.getLastLocation().longitude);
 
-        Log.i(TAG, "distance between players is " + distanceBetweenPlayers + " meters");
-
-//        if (distanceBetweenPlayers < tagDistance) {
         if (distanceBetweenPlayers < tagDistance && itPlayer != player) {
-            Log.i(TAG, "*************player is set to true*************");
             player.setIt(true);
             return true;
         } else {
@@ -497,27 +480,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    //Check to see if the player has been tagged/is it
     private boolean checkForTag(Player player) {
-        Log.i(TAG, "Made it into checkForTag");
         if (player.isIt()) {
             return false;
         }
         for(Player itPlayer : itPlayers) {
             Log.i(TAG, itPlayer.toString());
             if (isTagged(player, itPlayer)) {
-//                Toast.makeText(this, "" + player.getUsername() + " is now it!!!", Toast.LENGTH_SHORT);
-                //TODO: If future views added to app, may need to change "this"?
-
-                //TODO: this activity traps the user, so disabled for now.
-//                startActivity(new Intent(MapsActivity.this, NotificationActivity.class));
                 return true;
-
             }
         }
         return false;
     }
 
-    // query for the session associated with the sessionId that was passed from MainActivity
+    //Query for the session associated with the sessionId that was passed from MainActivity
     private void queryForSelectedSession(String sessionId) {
         GetSessionQuery getSessionQuery = GetSessionQuery.builder().id(sessionId).build();
         awsAppSyncClient.query(getSessionQuery)
@@ -525,9 +502,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .enqueue(getSessionCallBack);
     }
 
-    // Make a Player
+    //Make a Player
     private void createPlayer() {
-        Log.i(TAG, "Making a player with " + sessionId + " " + startingPoint.toString());
         CreatePlayerInput input = CreatePlayerInput.builder()
                 .playerSessionId(sessionId)
                 .lat(startingPoint.latitude)
@@ -540,7 +516,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         awsAppSyncClient.mutate(createPlayerMutation).enqueue(new GraphQLCall.Callback<CreatePlayerMutation.Data>() {
             @Override
             public void onResponse(@Nonnull Response<CreatePlayerMutation.Data> response) {
-                Log.i(TAG, "made it to creating a new player");
                 playerID = response.data().createPlayer().id();
                 player = new Player();
                 player.setId(playerID);
@@ -553,12 +528,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             @Override
             public void onFailure(@Nonnull ApolloException e) {
-                Log.e(TAG, "couldn't make a new player");
+                Log.e(TAG, "Couldn't make a new player");
             }
         });
     }
 
-    // Query for Player
+    //Query for Player
     private void queryForPlayerObject() {
         GetPlayerQuery query = GetPlayerQuery.builder().id(playerID).build();
         awsAppSyncClient.query(query)
@@ -566,11 +541,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .enqueue(new GraphQLCall.Callback<GetPlayerQuery.Data>() {
                     @Override
                     public void onResponse(@Nonnull Response<GetPlayerQuery.Data> response) {
-                        Log.i(TAG, "made it to making a query for player object");
-                        // make a player instance
+                        //Make a player instance
                         player = new Player(response.data().getPlayer());
 
-                        // Making stuff on the map for the player
+                        //Making stuff on the map for the player
                         Handler markerHandler = new Handler(Looper.getMainLooper()){
                             @Override
                             public void handleMessage (Message inputMessage) {
@@ -582,7 +556,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                         .radius(tagDistance)
                                         .fillColor(Color.TRANSPARENT)
                                         .strokeWidth(3));
-                                // change color of marker depending on if player is it or not
+                                //Change color of marker depending on if player is it or not
                                 if (player.isIt()) {
                                     marker.setIcon(zombiepin);
                                     circle.setStrokeColor(itColor);
@@ -597,7 +571,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                                 player.setCircle(circle);
                                 player.setMarker(marker);
-                                //adding player to the list of players in the game
+                                //Add player to the list of players in the game
                                 players.add(player);
                             }
                         };
@@ -606,45 +580,34 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                     @Override
                     public void onFailure(@Nonnull ApolloException e) {
-                        Log.e(TAG, "failed to get query for player object");
+                        Log.e(TAG, "Failed to get query for player object");
                     }
                 });
     }
 
-    // Callback to get current game session
+    //Callback to get current game session
     private GraphQLCall.Callback<GetSessionQuery.Data> getSessionCallBack = new GraphQLCall.Callback<GetSessionQuery.Data>() {
         @Override
         public void onResponse(@Nonnull final Response<GetSessionQuery.Data> response) {
             currentSession = response.data().getSession();
-            Log.i(TAG, "Current session is "+ currentSession.toString());
             startingPoint = new LatLng(currentSession.lat(), currentSession.lon());
-            Log.i(TAG, "Starting point is " + startingPoint);
 
-            //once the session ID and starting loc are in place, then make the first player.
+            //Once the session ID and starting location are in place, make the first player.
             queryForPlayerObject();
-//            if (playerID == null) {
-//                createPlayer();
-//            } else {
-//                queryForPlayerObject();
-//            }
 
-            Log.i(TAG, "Made it to the after the if/else within getSessionCallBack");
-            //converting from GetSessionItems to players
+            //Convert GetSessionItems to players
             players = playerConverter(currentSession.players().items());
 
             Handler h = new Handler(Looper.getMainLooper()){
                 @Override
                 public void handleMessage(Message inputMessage){
-                    Log.i(TAG, "Made it to handleMessage");
-                    //lat and long for the session
-
+                    //Lat and Long for the session
                     try {
                         TimeUnit.SECONDS.sleep(1);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                     initializeMarkersAndCirclesForPlayers(players);
-
                 }
             };
             h.obtainMessage().sendToTarget();

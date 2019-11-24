@@ -118,7 +118,6 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
     @Override
     protected void onResume() {
         super.onResume();
-        Log.i(TAG, "onResume called");
         //If checkGpsStatus returns true to verify that the player's phone has GPS is turned on
         if (checkGpsStatus()) {
             //Check if the player is already in the database
@@ -133,7 +132,6 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
     public void goToMap(View view) {
         // TODO: check if player already exist in the database
         EditText sessionName = findViewById(R.id.editText_session_name);
-        Log.i(TAG, "goToMap: "+sessionName.getText());
         if(sessionName.getText().length()>0) {
             CreateSessionInput input = CreateSessionInput.builder()
                     .title(sessionName.getText().toString())
@@ -205,7 +203,6 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
 
     //Get all sessions from the database
     private void queryAllSessions() {
-        Log.i(TAG, "query all sessions");
         awsAppSyncClient.query(ListSessionsQuery.builder().build())
                 .responseFetcher(AppSyncResponseFetchers.NETWORK_ONLY)
                 .enqueue(getAllSessionsCallBack);
@@ -235,7 +232,6 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
 
     //Get current player location
     private void getCurrentUserLocation() {
-        Log.i(TAG, "Called getCurrentUserLocation");
         fusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
             @Override
             public void onSuccess(final Location location) {
@@ -246,7 +242,6 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
                         public void run() {
                             currentUserLocation = new LatLng(location.getLatitude(), location.getLongitude());
                             queryAllSessions();
-                            Log.i(TAG, "PlayerId in getcurrentUserlocation " + playerId);
                             if (playerId == null) {
                                 createPlayer();
                             }
@@ -269,12 +264,10 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
                 .enqueue(new GraphQLCall.Callback<ListPlayersQuery.Data>() {
                     @Override
                     public void onResponse(@Nonnull Response<ListPlayersQuery.Data> response) {
-                        Log.i(TAG, "this is playerID " + playerId);
                         String playerName = AWSMobileClient.getInstance().getUsername();
                         List<ListPlayersQuery.Item> players = response.data().listPlayers().items();
                         for(ListPlayersQuery.Item player : players){
                             if(player.username().equals(playerName)){
-                                Log.i(TAG, "Username match " + playerName + " " + player.id());
                                 playerId = player.id();
                                 getCurrentUserLocation();
                                 return;
@@ -304,7 +297,6 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
             @Override
             public void onResponse(@Nonnull Response<CreatePlayerMutation.Data> response) {
                 playerId = response.data().createPlayer().id();
-                Log.i(TAG, "created a player"+ playerId);
 
             }
 
