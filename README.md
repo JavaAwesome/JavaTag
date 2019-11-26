@@ -3,7 +3,7 @@
 ## APK
 To download and play Zombie Tag click the zombie below  
 
-[![Build Status](https://github.com/JavaAwesome/JavaTag/blob/Dev/app/src/main/res/mipmap-hdpi/ic_launcher_round.png)](https://github.com/JavaAwesome/JavaTag/blob/Dev/zombietag.apk)
+[![Download App](https://github.com/JavaAwesome/JavaTag/blob/Dev/app/src/main/res/mipmap-hdpi/ic_launcher_round.png)](https://github.com/JavaAwesome/JavaTag/blob/Dev/zombietag.apk)
 
 ## Team Members
 * Ahren Swett
@@ -22,6 +22,8 @@ To make an android app where players can see one another on a map and tag one an
 ## Deployment
 
 ## Instructions to run the app on your phone
+
+<!-- Actual instructions go here, please! -->
 
 ### Contribute
 No contribution guidelines at this point.
