@@ -13,6 +13,9 @@ To download and play Zombie Tag click the zombie below
 * Sarah Fisher
 * Sharina Stubbs
 
+## Demo
+A video of the demo can be found at; https://youtu.be/YGFy6kjfMV8
+
 ## Version
 1.0.0
 
