@@ -68,9 +68,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     GetSessionQuery.GetSession currentSession;
 
     LatLng startingPoint;
-    final static long REFRESHRATE = 3*1000;
-    final static int SUBJECT = 0;
-    Handler locationHandler;
+    // Lots of leftover, unused variables around in this code; I wish they'd been removed.
     LocationCallback mLocationCallback;
     private FusedLocationProviderClient mFusedLocationClient;
     final private int tagDistance = 50;
@@ -81,6 +79,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     BitmapDescriptor playerpin;
     List<Player> players;
     private final String TAG = "javatag";
+    // The inconsistency of playerID vs sessionId (in capitalization) is annoying.
     String playerID;
     Player player;
     String sessionId;
@@ -113,15 +112,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Log.i(TAG, "Session ID for map is: " + sessionId + "the player Id is " + playerID);
 
         associateUserWithSession();
-
-        // Pull user ID from MainActivity
-        // If player comes from the recyclerView it will come through as null so we will create a new player
-        // Else the player created the game and we will query the player object
-//        if (playerID == null) {
-//            createPlayer();
-//        } else {
-//            queryForPlayerObject();
-//        }
+        // so what this actually starts is:
+        // associateUserWithSession
+        // makes request to dynamo
+        // then calls queryForSelectedSession
+        // which simultaneously calls initializeMarkers and queryForPlayerObject
+        // queryForPlayerObject gets the current player's data, and sets it to be part of the players list
+        // initializeMarkers does the same exact work, and the current player should already be in that players list!
+        // this is why I was getting "two" players in my single player game!
+        // I think this is rendering the current player twice!!!
+        // But regardless, this is QUITE complicated and all kicked off by calling associateUserWithSession here; that feels
+        // like a lot of work for a method with such a short name! "renderGame" might be more accurate than "associateUserWithSession"!
 
         //Stuff doesn't start running until the map is ready in onMapReady(Map stuff)
         mLocationCallback = new LocationCallback() {
@@ -133,7 +134,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     return;
                 }
 
-                updateMarkerAndCircleForAllPlayers(players);
+                // I think it's odd that we call this here, instead of when updates come in from
+                // our subscription to Dynamo.
+                updateMarkerAndCircleForAllPlayers();
                 sendUserLocationQuery(locationResult);
 
             }
@@ -388,7 +391,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     // Creates markers and circles for each player in the list for that session
-    private void initializeMarkersAndCirclesForPlayers(List<Player> players) {
+    // Since this only ever operates on the instance variable, it doesn't need a param.
+    private void initializeMarkersAndCirclesForPlayers() {
         Log.i(TAG, "made it to initialized markers");
         for(Player player: players) {
             Marker marker = mMap.addMarker(new MarkerOptions()
@@ -424,8 +428,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .strokeWidth(5));
     }
 
-
-    private void updateMarkerAndCircleForAllPlayers(List<Player> players) {
+    // Since this only ever operates on the instance variable, it doesn't need a parameter.
+    private void updateMarkerAndCircleForAllPlayers() {
         Log.i(TAG, "updating markers");
         Log.i(TAG, "How many players? " + players.size());
 
@@ -451,15 +455,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 Log.i(TAG, "In the updateMarkerAndCircleForAllPlayers");
                 playersJustGotTagged.add(player);
 
-//                player.getMarker().setIcon(zombiepin);
-//                player.getCircle().setStrokeColor(itColor);
-
-//                mMap.addCircle(player.getCircle());
+                // This thing with a bunch of commented out lines with the occasional close curly
+                // brace in the middle is quite annoying! I'd prefer to just remove these lines.
             }
-//            else {
-//                player.getMarker().setIcon(playerpin);
-//                player.getCircle().setStrokeColor(notItColor);
-//            }
         }
         //TODO add the player instance is it update, only updates the player list so far
         for(Player player : players){
@@ -545,39 +543,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .enqueue(getSessionCallBack);
     }
 
-    // Make a Player
-    private void createPlayer() {
-        Log.i(TAG, "Making a player with " + sessionId + " " + startingPoint.toString());
-        CreatePlayerInput input = CreatePlayerInput.builder()
-                .playerSessionId(sessionId)
-                .lat(startingPoint.latitude)
-                .lon(startingPoint.longitude)
-                .username(AWSMobileClient.getInstance().getUsername())
-                .isIt(false)
-                .build();
-        CreatePlayerMutation createPlayerMutation = CreatePlayerMutation.builder().input(input).build();
-
-        awsAppSyncClient.mutate(createPlayerMutation).enqueue(new GraphQLCall.Callback<CreatePlayerMutation.Data>() {
-            @Override
-            public void onResponse(@Nonnull Response<CreatePlayerMutation.Data> response) {
-                Log.i(TAG, "made it to creating a new player");
-                playerID = response.data().createPlayer().id();
-                player = new Player();
-                player.setId(playerID);
-                player.setIt(false);
-                player.setUsername(AWSMobileClient.getInstance().getUsername());
-                List<LatLng> bananas = new LinkedList<>();
-                bananas.add(startingPoint);
-                player.setLocations(bananas);
-            }
-
-            @Override
-            public void onFailure(@Nonnull ApolloException e) {
-                Log.e(TAG, "couldn't make a new player");
-            }
-        });
-    }
-
     // Query for Player
     private void queryForPlayerObject() {
         GetPlayerQuery query = GetPlayerQuery.builder().id(playerID).build();
@@ -642,13 +607,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             //once the session ID and starting loc are in place, then make the first player.
             queryForPlayerObject();
-//            if (playerID == null) {
-//                createPlayer();
-//            } else {
-//                queryForPlayerObject();
-//            }
 
-            Log.i(TAG, "Made it to the after the if/else within getSessionCallBack");
+            // there is no if/else here... this is defintitely an out of date comment
             //converting from GetSessionItems to players
             players = playerConverter(currentSession.players().items());
 
@@ -663,7 +623,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    initializeMarkersAndCirclesForPlayers(players);
+                    initializeMarkersAndCirclesForPlayers();
 
                 }
             };
@@ -684,11 +644,5 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         return outGoingList;
     };
-
-    // TODO: Build onDestroy that deletes user data from DB
-//    @Override
-//    protected void onDestroy() {
-//        super.onDestroy();
-//    }
 
 }

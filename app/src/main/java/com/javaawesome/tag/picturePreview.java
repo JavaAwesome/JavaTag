@@ -15,6 +15,7 @@ import android.widget.ImageView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 
+// Really odd that this class name doesn't use UpperCamelCase!
 public class picturePreview extends AppCompatActivity {
 
     @Override

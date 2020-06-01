@@ -53,7 +53,8 @@ import static android.Manifest.permission.ACCESS_COARSE_LOCATION;
 import static android.Manifest.permission.ACCESS_FINE_LOCATION;
 
 public class MainActivity extends AppCompatActivity implements SessionAdapter.OnSessionInteractionListener {
-    protected static String photoBucketPath = "https://javatag091c7e33ab0441e4bdf34cbdf68d2bd1-local.s3-us-west-2.amazonaws.com/";
+    // final is a good idea for a variable like this that you don't ever want to accidentally change
+    protected static final String photoBucketPath = "https://javatag091c7e33ab0441e4bdf34cbdf68d2bd1-local.s3-us-west-2.amazonaws.com/";
     private final String TAG = "javatag";
     RecyclerView recyclerNearbySessions;
     SessionAdapter sessionAdapter;
@@ -107,7 +108,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         sessions = new LinkedList<>();
 
         // initialize recycler view to display nearby game sessions
-        // TODO: have recycler view filter sessions by distance to user
+        // I think this was completed with the call to filter--so this is an out of date comment.
         recyclerNearbySessions = findViewById(R.id.recycler_nearby_sessions);
         recyclerNearbySessions.setLayoutManager(new LinearLayoutManager(this));
         this.sessionAdapter = new SessionAdapter(this.sessions, this);
@@ -119,7 +120,6 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         super.onResume();
         Log.i(TAG, "onresume called");
         if (checkGpsStatus()) {
-//            getCurrentUserLocation();
             checkIfPlayerAlreadyExistInDatabase();
         } else {
             buildAlertMessageNoGps();
@@ -127,10 +127,13 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
     }
 
     // Create new game session and go to map page
-    public void goToMap(View view) {
+    // Called when the new session button is tapped, so it should probably have a clearer name!
+    public void createAndGoToNewSession(View view) {
         // TODO: check if player already exist in the database
+        // didn't we check if the player existed in onResume? Why do we need to call it again now?
+        // Or is this just a leftover todo?
         EditText sessionName = findViewById(R.id.editText_session_name);
-        Log.i(TAG, "goToMap: "+sessionName.getText());
+        Log.i(TAG, "createAndGoToNewSession: "+sessionName.getText());
         if(sessionName.getText().length()>0) {
             CreateSessionInput input = CreateSessionInput.builder()
                     .title(sessionName.getText().toString())
@@ -143,10 +146,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
                 @Override
                 public void onResponse(@Nonnull Response<CreateSessionMutation.Data> response) {
                     sessionId = response.data().createSession().id();
-                    Intent goToMapIntent = new Intent(MainActivity.this, MapsActivity.class);
-                    goToMapIntent.putExtra("sessionId", sessionId);
-                    goToMapIntent.putExtra("userID", playerId);
-                    MainActivity.this.startActivity(goToMapIntent);
+                    joinExistingGameSession(sessionId);
                 }
 
                 @Override
@@ -164,14 +164,7 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
         Intent goToUserPage = new Intent(this, UserProfile.class);
         this.startActivity(goToUserPage.putExtra("playerId",playerId));
     }
-
-    //////// TEST BUTTON /////
-    public void onTestyClick(View view) {
-        startActivity(new Intent(MainActivity.this, NotificationActivity.class));
-    }
-
-
-
+    // dead code 💀
 
     // Direct users to sign in page
     private void signInUser() {
@@ -198,41 +191,14 @@ public class MainActivity extends AppCompatActivity implements SessionAdapter.On
     }
 
     // onclick method for button to join existing game sessions
+    // If you make this a bit more generic, it'll work for new sessions and existing ones!
     @Override
-    public void joinExistingGameSession(ListSessionsQuery.Item session) {
+    public void joinExistingGameSession(String sessionId) {
         Intent goToMapIntent = new Intent(this, MapsActivity.class);
-        goToMapIntent.putExtra("sessionId", session.id());
+        goToMapIntent.putExtra("sessionId", sessionId);
         goToMapIntent.putExtra("userID", playerId);
         this.startActivity(goToMapIntent);
     }
-
-//    @Override
-//    public void addPlayerToChosenGame(final ListSessionsQuery.Item session) {
-////        Query
-//        CreatePlayerInput playerInput = CreatePlayerInput.builder()
-//                .playerSessionId(session.id())
-//                .isIt(false)
-//                .lat(currentUserLocation.latitude)
-//                .lon(currentUserLocation.longitude)
-//                .username(AWSMobileClient.getInstance().getUsername())
-//                .build();
-//        CreatePlayerMutation createPlayerMutation = CreatePlayerMutation.builder().input(playerInput).build();
-//        awsAppSyncClient.mutate(createPlayerMutation).enqueue((new GraphQLCall.Callback<CreatePlayerMutation.Data>() {
-//            @Override
-//            public void onResponse(@Nonnull Response<CreatePlayerMutation.Data> response) {
-//                String userID = response.data().createPlayer().id();
-//                Log.i(TAG, "player mutation happened! ... inside of a session mutation");
-//                Intent goToMapIntent = new Intent(MainActivity.this, MapsActivity.class);
-//                goToMapIntent.putExtra("sessionId", session.id());
-//                goToMapIntent.putExtra("userID", userID);
-//                Log.i("veach", session.id() + "\n" +userID);
-//            }
-//            @Override
-//            public void onFailure(@Nonnull ApolloException e) {
-//                Log.i(TAG, "mutation of player failed, boohoo!");
-//            }
-//        }));
-//    }
 
     // get all sessions
     private void queryAllSessions() {
